@@ -1,42 +1,35 @@
 #include "Message.hpp"
 
+// consider std::move
 Message::Message(MessageRole role, std::string text) {
-    // TODO: implement according to the M1 specification.
-
+    this->role_ = role;
+    this->text_ = text;
 }
 
 bool Message::operator==(const Message& other) const {
-    // TODO
-
+    return (this->role_ == other.role_ && this->text_ == other.text_);
 }
 
 bool Message::operator!=(const Message& other) const {
-    // TODO
-
+    return !(*this == other);
 }
 
 MessageRole Message::role() const noexcept {
-    // TODO
-    
-    return MessageRole::User;
+    return role_;
 }
 
 const std::string& Message::text() const noexcept {
-    // TODO
-    
+    return text_;
 }
 
 void Message::setRole(MessageRole role) noexcept {
-    // TODO
-    
+    this->role_ = role;
 }
 
 void Message::setText(std::string text) {
-    // TODO
-    
+    this->text_ = text;
 }
 
 bool Message::empty() const noexcept {
-    // TODO
-    
+    return text_.empty();
 }
