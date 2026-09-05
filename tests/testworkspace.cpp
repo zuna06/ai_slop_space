@@ -86,12 +86,12 @@ void document_equality_empty_test() {
 
 void document_load_success_test() {
     Document doc;
-    assert(doc.load("../text/sample.txt") == true);
+    assert(doc.load("text/sample.txt") == true);
 }
 
 void document_load_empty() {
     Document doc;
-    doc.load("../text/empty.txt");
+    doc.load("text/empty.txt");
     assert(doc.empty() == true);
 }
 
