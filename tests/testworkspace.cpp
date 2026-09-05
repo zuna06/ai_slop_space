@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <fstream>
 
 #include "Prompt.hpp"
 #include "Workspace.hpp"
@@ -86,13 +87,17 @@ void document_equality_empty_test() {
 
 void document_load_success_test() {
     Document doc;
-    assert(doc.load("text/sample.txt") == true);
+    std::ofstream file("test.txt");
+    assert(doc.load("test.txt") == true);
+    remove("test.txt");
 }
 
 void document_load_empty() {
     Document doc;
-    doc.load("text/empty.txt");
+    std::ofstream file("test.txt");
+    doc.load("test.txt");
     assert(doc.empty() == true);
+    remove("test.txt");
 }
 
 void document_load_fail_test() {
