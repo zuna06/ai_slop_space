@@ -26,18 +26,11 @@ bool Document::load(const std::string& path) {
     std::ifstream file(fs_path);
     std::ostringstream oss;
 
-    // change this
-    if (file.fail()) {
-        // std::cerr << "Error: failed to open " << path << "\n";
-        return false;
-    }
+    if (file.fail()) return false;
 
     // read into oss
     oss << file.rdbuf();
-    if (file.bad()) {
-        // std::cerr << "Error: failed process file stream" << "\n";
-        return false;
-    }
+    if (file.bad()) return false;
 
     // set document members
     this->title_ = fs_path.filename().string();
