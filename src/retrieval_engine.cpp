@@ -52,7 +52,7 @@ std::vector<SearchResult> RetrievalEngine::search(const std::string& query,
             size_t term_freq_temp = index.term_frequency(term, chunk.id);
             if (term_freq_temp == 0) continue;
             matched++;
-            
+
             double term_freq = 1 + std::log(static_cast<double>(term_freq_temp));
             size_t doc_freq = index.document_frequency(term);
             double idf = std::log((static_cast<double>(chunks_size) + 1.0) /
@@ -89,7 +89,7 @@ std::vector<SearchResult> RetrievalEngine::search(const std::string& query,
     std::sort(results.begin(), results.end(), sort_lambda);
 
     // resize if results are too long
-    if (results.size() > k) {
+    if (results.size() > static_cast<size_t>(k)) {
         results.resize(k);
     }
 

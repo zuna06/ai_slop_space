@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <algorithm>
+#include <cmath>
 
 namespace aiws {
 
