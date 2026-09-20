@@ -28,8 +28,8 @@ void CorpusIndex::build(const std::vector<Chunk>& chunks) {
         }
     }
 
-    postings_ = postings;
-    chunk_by_id_ = chunk_by_id;
+    postings_ = std::move(postings);
+    chunk_by_id_ = std::move(chunk_by_id);
 }
 
 std::size_t CorpusIndex::document_frequency(

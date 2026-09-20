@@ -66,8 +66,8 @@ std::vector<TokenInfo> TextProcessor::tokenize(const std::string& text) {
             size_t begin = i;
             std::string token;
 
-            while (i < text_size && (std::isalpha(chr) || std::isdigit(chr))) {
-                token.push_back(std::tolower(chr));
+            while (i < text_size && (std::isalpha(text[i]) || std::isdigit(text[i]))) {
+                token.push_back(std::tolower(text[i]));
                 i++;
             }
 

@@ -51,8 +51,8 @@ void ProcessingCore::rebuild(const Workspace& workspace) {
 
     CorpusIndex index(chunks);
 
-    impl_->chunks = chunks;
-    impl_->index = index;
+    impl_->chunks = std::move(chunks);
+    impl_->index = std::move(index);
 }
 
 const std::vector<Chunk>& ProcessingCore::chunks() const noexcept {
