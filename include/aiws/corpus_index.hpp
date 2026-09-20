@@ -1,11 +1,13 @@
 #pragma once
 
 #include "aiws/processing_types.hpp"
+#include "aiws/text_processor.hpp"
 
 #include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 namespace aiws {
 

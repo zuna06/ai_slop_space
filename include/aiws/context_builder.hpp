@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aiws/processing_types.hpp"
+#include "aiws/text_processor.hpp"
 
 #include <cstddef>
 #include <vector>

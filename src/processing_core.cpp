@@ -3,7 +3,17 @@
 namespace aiws {
 
 struct ProcessingCore::Impl {
-    // TODO: define the internal state used by the processing core.
+    Chunker chunker { 
+        ChunkingPolicy {
+            kMaxChunkTokens,
+            kChunkOverlap,
+            kParagraphPreferenceWindow
+        }
+    };
+    CorpusIndex index;
+    RetrievalEngine retrieval;
+    ContextBuilder context_builder;
+    std::vector<Chunk> chunks;
 };
 
 ProcessingCore::ProcessingCore() : impl_(std::make_unique<Impl>()) { }
@@ -14,48 +24,75 @@ ProcessingCore::ProcessingCore(ProcessingCore&&) noexcept = default;
 
 ProcessingCore& ProcessingCore::operator=(ProcessingCore&&) noexcept = default;
 
-std::string ProcessingCore::normalize(const std::string&) {
-    // TODO: return the normalized form of the input text.
-    return {};
+std::string ProcessingCore::normalize(const std::string& text) {
+    return TextProcessor::normalize(text);
 }
 
-void ProcessingCore::rebuild(const Workspace&) {
-    // TODO: rebuild the processing state from the workspace.
+void ProcessingCore::rebuild(const Workspace& workspace) {
+    std::unordered_set<std::string> ids;
+    for (const auto& doc : workspace.documents()) {
+        if (!ids.insert(doc.id()).second) {
+            throw std::invalid_argument("duplicate document id");
+        }
+    }
+
+    std::vector<Chunk> chunks;
+    size_t order = 0;
+
+    for (const auto& doc : workspace.documents()) {
+        auto doc_chunks = impl_->chunker.chunk(doc, order);
+        
+        for (auto& chunk : doc_chunks) {
+            chunks.push_back(chunk);
+        }
+
+        order++;
+    }
+
+    CorpusIndex index(chunks);
+
+    impl_->chunks = chunks;
+    impl_->index = index;
 }
 
 const std::vector<Chunk>& ProcessingCore::chunks() const noexcept {
-    static const std::vector<Chunk> empty;
-
-    // TODO: return the chunks currently stored by the processing core.
-    return empty;
+    return impl_->chunks;
 }
 
 std::size_t ProcessingCore::chunk_count() const noexcept {
-    // TODO: return the number of stored chunks.
-    return 0;
+    return impl_->chunks.size();
 }
 
-std::size_t ProcessingCore::document_frequency(const std::string&) const {
-    // TODO: return the document frequency for the requested term.
-    return 0;
+std::size_t ProcessingCore::document_frequency(const std::string& term) const {
+    std::vector<std::string> normalized = TextProcessor::terms(term);
+    if (normalized.empty()) return 0;
+    if (normalized.size() > 1) {
+        throw std::invalid_argument("must be single token");
+    }
+
+    return impl_->index.document_frequency(normalized[0]);
 }
 
-std::size_t ProcessingCore::term_frequency(const std::string&,
-                                           const std::string&) const {
-    // TODO: return the term frequency for the requested chunk.
-    return 0;
+std::size_t ProcessingCore::term_frequency(const std::string& term,
+                                           const std::string& chunk_id) const {
+    std::vector<std::string> normalized = TextProcessor::terms(term);
+    if (normalized.empty()) return 0;
+    if (normalized.size() > 1) {
+        throw std::invalid_argument("must be single token");
+    }
+
+    return impl_->index.term_frequency(normalized[0], chunk_id);
 }
 
-std::vector<SearchResult> ProcessingCore::search(const std::string&, int) const {
-    // TODO: return the ranked results for the requested query.
-    return {};
+std::vector<SearchResult> ProcessingCore::search(const std::string& query, int num) const {
+    return impl_->retrieval.search(query, num, impl_->chunks, impl_->index);
 }
 
-std::vector<ContextItem> ProcessingCore::build_context(const std::string&,
-                                                       int,
-                                                       std::size_t) const {
-    // TODO: build bounded context for the requested query.
-    return {};
+std::vector<ContextItem> ProcessingCore::build_context(const std::string& query,
+                                                       int num,
+                                                       std::size_t max_tokens) const {
+    auto results = search(query, num);
+    return impl_->context_builder.build(results, max_tokens);
 }
 
 }  // namespace aiws

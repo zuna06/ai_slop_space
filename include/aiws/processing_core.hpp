@@ -2,11 +2,19 @@
 
 #include "aiws/processing_types.hpp"
 #include "aiws/workspace.hpp"
+#include "aiws/text_processor.hpp"
+#include "aiws/chunker.hpp"
+#include "aiws/context_builder.hpp"
+#include "aiws/corpus_index.hpp"
+#include "aiws/retrieval_engine.hpp"
+
 
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
+#include <stdexcept>
 
 namespace aiws {
 

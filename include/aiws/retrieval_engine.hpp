@@ -2,9 +2,13 @@
 
 #include "aiws/corpus_index.hpp"
 #include "aiws/processing_types.hpp"
+#include "aiws/text_processor.hpp"
 
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <unordered_set>
+#include <algorithm>
 
 namespace aiws {
 
