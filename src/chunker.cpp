@@ -36,7 +36,7 @@ std::vector<Chunk> Chunker::chunk(const Document& document, std::size_t document
 
             size_t begin = end - policy_.paragraph_window;
 
-            for (size_t i = end; i > begin; i--) {
+            for (size_t i = end; i >= begin; i--) {
                 if (tokens[i].paragraph != tokens[i - 1].paragraph) {
                     end = i;
                     break;
