@@ -1,5 +1,7 @@
 #include "aiws/chunker.hpp"
 
+#include "aiws/text_processor.hpp"
+
 #include <stdexcept>
 
 namespace aiws {
