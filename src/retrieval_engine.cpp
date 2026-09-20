@@ -41,7 +41,7 @@ std::vector<SearchResult> RetrievalEngine::search(const std::string& query,
         }
     }
 
-    // scoring
+    // scoring algo
     std::vector<SearchResult> results;
     for (size_t ci : chunk_indices) {
         const Chunk& chunk = chunks[ci];

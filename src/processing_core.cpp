@@ -39,6 +39,7 @@ void ProcessingCore::rebuild(const Workspace& workspace) {
     std::vector<Chunk> chunks;
     size_t order = 0;
 
+    // the jonkler
     for (const auto& doc : workspace.documents()) {
         auto doc_chunks = impl_->chunker.chunk(doc, order);
         
@@ -51,6 +52,7 @@ void ProcessingCore::rebuild(const Workspace& workspace) {
 
     CorpusIndex index(chunks);
 
+    // wow how did i forget move exists
     impl_->chunks = std::move(chunks);
     impl_->index = std::move(index);
 }

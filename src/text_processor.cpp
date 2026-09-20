@@ -61,7 +61,6 @@ std::vector<TokenInfo> TextProcessor::tokenize(const std::string& text) {
         }
 
         char chr = text[i];
-
         if (std::isalpha(chr) || std::isdigit(chr)) {
             size_t begin = i;
             std::string token;
