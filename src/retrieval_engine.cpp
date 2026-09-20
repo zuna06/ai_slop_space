@@ -1,5 +1,11 @@
 #include "aiws/retrieval_engine.hpp"
 
+#include "aiws/text_processor.hpp"
+#include <stdexcept>
+#include <unordered_set>
+#include <algorithm>
+#include <cmath>
+
 namespace aiws {
 
 double RetrievalEngine::canonical_score(double value) {

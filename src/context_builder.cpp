@@ -1,5 +1,7 @@
 #include "aiws/context_builder.hpp"
 
+#include "aiws/text_processor.hpp"
+
 namespace aiws {
 
 std::vector<ContextItem> ContextBuilder::build(const std::vector<SearchResult>& ranked, std::size_t token_budget) const {

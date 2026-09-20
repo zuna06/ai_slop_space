@@ -1,5 +1,13 @@
 #include "aiws/processing_core.hpp"
 
+#include "aiws/text_processor.hpp"
+#include "aiws/chunker.hpp"
+#include "aiws/context_builder.hpp"
+#include "aiws/corpus_index.hpp"
+#include "aiws/retrieval_engine.hpp"
+#include <unordered_set>
+#include <stdexcept>
+
 namespace aiws {
 
 struct ProcessingCore::Impl {
