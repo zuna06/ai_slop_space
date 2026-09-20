@@ -1,8 +1,6 @@
 #include "aiws/corpus_index.hpp"
 #include "aiws/text_processor.hpp"
 
-#include <unordered_map>
-#include <vector>
 #include <stdexcept>
 
 namespace aiws {

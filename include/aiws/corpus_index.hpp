@@ -4,6 +4,8 @@
 
 #include <cstddef>
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 namespace aiws {
 
