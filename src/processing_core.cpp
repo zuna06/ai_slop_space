@@ -19,20 +19,29 @@ struct ProcessingCore::Impl {
     // M2 TODO: refactor the processing components so ProcessingCore owns and
     // uses the supplied strategy objects polymorphically. The concrete M1
     // members below keep the starter's default path runnable.
-    Chunker chunker{ChunkingPolicy{kMaxChunkTokens, kChunkOverlap,
-                                   kParagraphPreferenceWindow}};
-    RetrievalEngine retrieval;
-    ContextBuilder context;
+    std::unique_ptr<ChunkingStrategy> chunker;
+    std::unique_ptr<RetrievalStrategy> retrieval;
+    std::unique_ptr<ContextStrategy> context;
 };
 
-ProcessingCore::ProcessingCore() : impl_(std::make_unique<Impl>()) {}
+ProcessingCore::ProcessingCore() : impl_(std::make_unique<Impl>()) {
+    impl_->chunker = std::make_unique<Chunker>(ChunkingPolicy{kMaxChunkTokens, kChunkOverlap, kParagraphPreferenceWindow});
+    impl_->retrieval = std::make_unique<RetrievalEngine>();
+    impl_->context = std::make_unique<ContextBuilder>();
+}
 
-ProcessingCore::ProcessingCore(std::unique_ptr<ChunkingStrategy>,
-                               std::unique_ptr<RetrievalStrategy>,
-                               std::unique_ptr<ContextStrategy>) {
+ProcessingCore::ProcessingCore(std::unique_ptr<ChunkingStrategy> chunk,
+                               std::unique_ptr<RetrievalStrategy> retrieval,
+                               std::unique_ptr<ContextStrategy> context) 
+                               : impl_(std::make_unique<Impl>()) {
     // M2 TODO: validate non-null strategies, take exclusive ownership, and
     // compose the processing core from them.
-    throw std::logic_error("M2 strategy injection not implemented");
+    // throw std::logic_error("M2 strategy injection not implemented");
+    if (!chunk || !retrieval || !context) throw std::invalid_argument("null pointers");
+
+    impl_->chunker = std::move(chunk);
+    impl_->retrieval = std::move(retrieval);
+    impl_->context = std::move(context);
 }
 
 ProcessingCore::~ProcessingCore() = default;
@@ -51,7 +60,7 @@ void ProcessingCore::rebuild(const Workspace& workspace) {
         if (!document_ids.insert(doc.id()).second) {
             throw std::invalid_argument("duplicate document id: " + doc.id());
         }
-        auto produced = impl_->chunker.chunk(doc, order);
+        auto produced = impl_->chunker->chunk(doc, order);
         next_chunks.insert(next_chunks.end(),
                            std::make_move_iterator(produced.begin()),
                            std::make_move_iterator(produced.end()));
@@ -80,7 +89,7 @@ std::size_t ProcessingCore::term_frequency(const std::string& term,
 }
 
 std::vector<SearchResult> ProcessingCore::search(const std::string& query, int k) const {
-    return impl_->retrieval.search(query, k, impl_->chunks, impl_->index);
+    return impl_->retrieval->search(query, k, impl_->chunks, impl_->index);
 }
 
 std::vector<ContextItem> ProcessingCore::build_context(const std::string& query,
@@ -88,7 +97,7 @@ std::vector<ContextItem> ProcessingCore::build_context(const std::string& query,
                                                        std::size_t token_budget) const {
     if (k < 0) throw std::invalid_argument("k must be non-negative");
     if (token_budget == 0) return {};
-    return impl_->context.build(search(query, k), token_budget);
+    return impl_->context->build(search(query, k), token_budget);
 }
 
 }  // namespace aiws
