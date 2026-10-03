@@ -1,90 +1,71 @@
 #include "aiws/corpus_index.hpp"
+
 #include "aiws/text_processor.hpp"
 
 #include <stdexcept>
+#include <unordered_map>
 
 namespace aiws {
 
-CorpusIndex::CorpusIndex(const std::vector<Chunk>& chunks) {
-    build(chunks);
+CorpusIndex::CorpusIndex(const std::vector<Chunk>& chunks) { build(chunks);
 }
 
 void CorpusIndex::build(const std::vector<Chunk>& chunks) {
-    std::unordered_map<std::string, std::vector<Posting>> postings;
-    std::unordered_map<std::string, size_t> chunk_by_id;
+    std::unordered_map<std::string, std::vector<Posting>> next_postings;
+    std::unordered_map<std::string, std::size_t> next_lookup;
 
-    for (size_t i = 0; i < chunks.size(); i++) {
-        auto& chunk = chunks[i];
-        chunk_by_id[chunk.id] = i;
-
-        // check freq of term for this chunk
-        std::unordered_map<std::string, size_t> freq;
-        std::vector<std::string> terms = TextProcessor::terms(chunk.text);
-
-        for (auto& term : terms) {
-            freq[term]++;
+    for (std::size_t i = 0; i < chunks.size(); ++i) {
+        if (!next_lookup.emplace(chunks[i].id, i).second) {
+            throw std::invalid_argument("duplicate chunk id: " + chunks[i].id);
         }
-
-        // add a posting for each unique term
-        for (auto& pair : freq) {
-            postings[pair.first].push_back({i, pair.second});
+        std::unordered_map<std::string, std::size_t> frequency;
+        for (const auto& term : TextProcessor::terms(chunks[i].text)) ++frequency[term];
+        
+        for (const auto& [term, count] : frequency) {
+            next_postings[term].push_back(Posting{i, count});
         }
     }
 
-    postings_ = std::move(postings);
-    chunk_by_id_ = std::move(chunk_by_id);
+    postings_ = std::move(next_postings);
+    chunk_by_id_ = std::move(next_lookup);
 }
 
-std::size_t CorpusIndex::document_frequency(
-    const std::string& normalized_term) const noexcept {
-    // iterator
-    auto it = postings_.find(normalized_term);
-    if (it == postings_.end()) return 0;
-    return it->second.size();
+std::size_t CorpusIndex::document_frequency(const std::string& normalized_term) const noexcept {
+    const auto it = postings_.find(normalized_term);
+    return it == postings_.end() ? 0 : it->second.size();
 }
 
-std::size_t CorpusIndex::term_frequency(
-    const std::string& normalized_term,
-    const std::string& chunk_id) const noexcept {
-    // iterator
-    auto postings_it = postings_.find(normalized_term);
-    if (postings_it == postings_.end()) return 0;
+std::size_t CorpusIndex::term_frequency(const std::string& normalized_term, const std::string& chunk_id) const noexcept {
+    const auto lookup = chunk_by_id_.find(chunk_id);
     
-    auto chunk_it = chunk_by_id_.find(chunk_id);
-    if (chunk_it == chunk_by_id_.end()) return 0;
-
-    size_t target = chunk_it->second;
-    for (const auto& posting : postings_it->second) {
-        if (posting.chunk_index == target) {
-            return posting.frequency;
-        }
+    if (lookup == chunk_by_id_.end()) return 0;
+    
+    const auto it = postings_.find(normalized_term);
+    
+    if (it == postings_.end()) return 0;
+    
+    for (const auto& posting : it->second) {
+        if (posting.chunk_index == lookup->second) return posting.frequency;
     }
-
     return 0;
 }
 
 const std::vector<CorpusIndex::Posting>* CorpusIndex::postings(
     const std::string& normalized_term) const noexcept {
-    auto it = postings_.find(normalized_term);
-    if (it == postings_.end()) return nullptr;
-    return &it->second;
+    const auto it = postings_.find(normalized_term);
+    return it == postings_.end() ? nullptr : &it->second;
 }
 
-const Chunk* CorpusIndex::find_chunk(
-    const std::vector<Chunk>& chunks,
-    const std::string& chunk_id) const noexcept {
-    auto it = chunk_by_id_.find(chunk_id);
-    if (it == chunk_by_id_.end()) return nullptr;
-    if (it->second >= chunks.size()) return nullptr;
+const Chunk* CorpusIndex::find_chunk(const std::vector<Chunk>& chunks,
+                                     const std::string& chunk_id) const noexcept {
+    const auto it = chunk_by_id_.find(chunk_id);
+    if (it == chunk_by_id_.end() || it->second >= chunks.size()) return nullptr;
     return &chunks[it->second];
 }
 
 std::size_t CorpusIndex::chunk_index(const std::string& chunk_id) const {
-    auto it = chunk_by_id_.find(chunk_id);
-    if (it == chunk_by_id_.end()) {
-        throw std::out_of_range("invalid chunk id");
-    }
-
+    const auto it = chunk_by_id_.find(chunk_id);
+    if (it == chunk_by_id_.end()) throw std::out_of_range("unknown chunk id");
     return it->second;
 }
 

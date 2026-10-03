@@ -1,27 +1,39 @@
-# M1 DESIGN.md
+# M2 Technical & Design Understanding
 
-Replace this template with your own concise engineering explanation.
+This file is an assessed technical-understanding artifact, not ordinary project documentation.
+Answer all four questions using your own submitted implementation. Concise answers are acceptable when they are technically correct and specific.
 
-## 1. System structure
-Describe the major responsibilities in your M1 subsystem and how they interact.
+Generic descriptions of C++ concepts or restatements of the assignment that do not identify and explain corresponding parts of your code will receive limited credit.
 
-The different components are TextProcessor, Chunker, CorpusIndex, RetrievalENgine, ContextBuilder, and ProcessingCore. The TextProcessor is in charge of parsing text for normalization, tokenization, and extracting terms. It cleans up text inputs so they're easier to process and handle. Chunker takes a document that has been parsed (tokenized) and splits it into 120 token chunks. CorpusIndex maps terms to chunks that have them, it stores a posting (a chunk index, and frequency) for each unique term. It allows you to search for how often a term appears in a specific chunk or multiple chunks. RetrievalEngine is in charge of scoriong the chunks using the formula given in the M1 rubric. It also sorts based on scores and has its own tiebreaking method. ContextBuilder walks the scored results and packs them based on a certain token budget. If there are 10 chunks with 100 tokens each and the token budget is 550, then only the first 5 chunks and the first 50 tokens from the 6th chunk are saved into the context vector. ProcessingCore is the the top level component. It basically controls the rest of the components and you're able to do things like search, query, check for term or document frequencies, and more because the ProcessingCore functions are able to use each component. 
+## 1. Polymorphism and dynamic dispatch - 1.5 points
 
-## 2. Design decisions
-Explain the principal data structures, interfaces, and ownership decisions in your implementation and why you selected them.
-Other than std::vector for chunks I mainly used std::unordered_map.
-The vectors were really useful for saving the insertion order, but with unordered_map I had pairs of data which was especially helpful for the postings and chunk id lookup. unorderd_set was also useful for preventing duplicate chunk indexes or document ids, and I didn't care about the order. For ownernship in the Impl struct, I had all the components there, including a Chunks vector. Having one struct to hold that was easier since it keeps the main components in one place. 
+Identify one place in your M2 implementation where runtime polymorphism occurs. Name the relevant base interface, derived implementation, and `ProcessingCore` function involved. Trace the call from `ProcessingCore` to the selected strategy implementation and explain why the derived implementation is invoked.
 
-## 3. Correctness and consistency
-Identify the important invariants or failure cases your design must preserve and explain how your design addresses them.
-The most important invariant is the normalization. Processing the same text should have the same normalized tokens if it goes through either the document route or query route for normalization. They both go through the same TextProcessor's normalization path. If they were different then it would be redudant and might have caused an issue if there was a small error in one implementation. That would end up being seen in a query or search and the rest of the component functions as well. Some other things that are good to preserve is checking for duplicate document ids, and preserving states if the inpuit is invalid. For example, if a vector is empty when it shouldnt be or when a number is not positive when it should be, the function stops and doesn't change the state of any of the data. At the same time if there was an issue in the middle of the code the data would be preserved, because I used temporary structures to operate on and I only moved or copied them to the main state (Impl for most cases) at the end, making sure the state was only changed when the process completed successfully.
+Then explain what would change if the relevant operation were not declared `virtual`.
 
-## 4. Testing strategy
-Explain what your tests cover and which risks or boundaries you considered most important.
-They cover text normalization, corpus queries, search ranking, token budget, verifying chunking, and error handling. It goes through ProcessingCore and other components directly to make sure the routes are correct and there are no errors along the way. The highest risks are the normalization because if it was off then the rest of the components operate on faulty data which would return faulty output for scoring, queries, frequencies, and more. 
+## 2. Ownership and lifetime - 1.5 points
 
-## 5. Alternatives considered
-Discuss at least two plausible design alternatives and why you did not choose them.
+Identify where one of the strategy objects is created, where ownership is transferred, and which object ultimately owns it. Explain how `std::unique_ptr` represents that ownership relationship and when the strategy object is destroyed.
 
-I was considering just having the text in chunks instead of normalized and I did start implementing them. I scrapped that idea because I realized I would have to normalize them anyways during indexing and searching. It would have been redundant and have a higher runtime.
-Another thing I considered was using unordered_map instead of std::vector for the retrieval engine. I'm just a little more used to unordered_maps and I thought it could be an option because of its O(1) insertion and lookup time. However, I decided to use std::vector instead because I would need to sort after and std::sort works on vector not unordered map. It was easier to use vector and sort lambda. With the map I would have to copy to a vector or an array anyways to sort it which would just add an extra step. 
+Also explain why `ProcessingCore` is move-only and why the strategy base classes require virtual destructors.
+
+## 3. Architecture, extensibility, and M1 compatibility - 1.5 points
+
+Explain one specific architectural decision in your M2 implementation that makes the processing system extensible while preserving M1 behavior.
+
+Identify the classes or interfaces involved and explain both:
+- how the default configuration preserves M1 behavior; and
+- how a different implementation can be substituted without changing the normal `ProcessingCore` API.
+
+Include one plausible design alternative and explain why the M2 design is preferable for this milestone. The alternative does not need to be something you actually implemented.
+
+## 4. Testing and defect reasoning - 1.5 points
+
+Select one meaningful test from your `tests/student_tests.cpp`.
+
+Explain:
+- what M2 requirement the test validates;
+- what specific implementation defect the test could detect; and
+- why your test provides useful evidence beyond simply rerunning the supplied public tests.
+
+If your test uses a custom strategy, explain how its observable behavior demonstrates that `ProcessingCore` is actually using runtime substitution.

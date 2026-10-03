@@ -1,146 +1,116 @@
 #include "aiws/text_processor.hpp"
 
-// anonymous namespace for helper functions
-namespace {
-
-    size_t check_paragraph(const std::string& text, size_t position) {
-        size_t text_size = text.size();
-        size_t i = position;
-
-        // check bounds
-        if (i >= text_size) return 0;
-
-        // checking for first newline
-        if (text[i] == '\r' && i + 1 < text_size && text[i + 1] == '\n') {
-            i += 2;
-        } else if (text[i] == '\n') {
-            i += 1;
-        } else {
-            return 0;
-        }
-
-        // ignore all spaces and tabs
-        while (i < text_size && (text[i] == ' ' || text[i] == '\t')) {
-            i++;
-        }
-        
-        // check bounds
-        if (i >= text_size) return 0;
-        
-        // checking if a second newline exists
-        if (text[i] == '\r' && i + 1 < text_size && text[i + 1] == '\n') {
-            i += 2;
-        } else if (text[i] == '\n') {
-            i += 1;
-        } else {
-            return 0;
-        }
-        
-        // return position after second newline if it exists
-        return i - position;
-    }
-
-}
+#include <algorithm>
 
 namespace aiws {
+namespace {
 
-std::vector<TokenInfo> TextProcessor::tokenize(const std::string& text) {
-    std::vector<TokenInfo> tokens;
-    size_t paragraph = 0;
-    size_t i = 0;
-    size_t text_size = text.size();
+bool is_ascii_alnum(unsigned char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9');
+}
 
-    while (i < text_size) {
-        
-        // check paragraph
-        size_t _index = check_paragraph(text, i);
-        if (_index > 0) {
-            paragraph++;
-            i += _index;
+char lower_ascii(unsigned char c) {
+    if (c >= 'A' && c <= 'Z')
+        return static_cast<char>(c - 'A' + 'a');
+    
+    return static_cast<char>(c);
+}
+
+bool blank_line_between(const std::string& text, std::size_t a, std::size_t b) {
+    bool first_newline = false;
+    
+    for (std::size_t i = a; i < b;) {
+        const char ch = text[i];
+        if (ch == '\r' || ch == '\n') {
+            if (ch == '\r' && i + 1 < b && text[i + 1] == '\n') ++i;
+            if (first_newline)
+                return true;
+            first_newline = true;
+            ++i;
             continue;
         }
-
-        char chr = text[i];
-        if (std::isalpha(chr) || std::isdigit(chr)) {
-            size_t begin = i;
-            std::string token;
-
-            while (i < text_size && (std::isalpha(text[i]) || std::isdigit(text[i]))) {
-                token.push_back(std::tolower(text[i]));
-                i++;
-            }
-
-            tokens.push_back( {token, begin, i, paragraph} );
-        } else {
-            i++;
-        }
-    } 
-
-    return tokens;
+        if (first_newline && ch != ' ' && ch != '\t')
+            first_newline = false;
+        ++i;
+    }
+    return false;
 }
 
-std::vector<std::string> TextProcessor::terms(const std::string& data) {
-    std::vector<std::string> terms;
-    std::string temp;
+}  // namespace
 
-    size_t data_size = data.size();
-    temp.reserve(data_size);
-    
-    for (size_t i = 0; i < data_size; i++) {
-        char chr = std::tolower(data[i]);
+std::vector<TokenInfo> TextProcessor::tokenize(const std::string& text) {
+    std::vector<TokenInfo> result;
+    std::string current;
+    std::size_t token_begin = 0;
 
-        if (std::isalpha(chr) || std::isdigit(chr)) {
-            temp.push_back(chr);
+    auto finish = [&](std::size_t end) {
+        if (!current.empty()) {
+            result.push_back(TokenInfo{current, token_begin, end, 0});
+            current.clear();
+        }
+    };
+
+    for (std::size_t i = 0; i < text.size(); ++i) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        if (is_ascii_alnum(c)) {
+            if (current.empty())
+                token_begin = i;
+            current.push_back(lower_ascii(c));
         } else {
-            if (temp.size() > 0) {
-                terms.push_back(temp);
-                temp.clear();
-            }
+            finish(i);
         }
     }
+    finish(text.size());
 
-    if (!temp.empty()) terms.push_back(temp);
-
-    return terms;
+    std::size_t paragraph = 0;
+    for (std::size_t i = 0; i < result.size(); ++i) {
+        if (i > 0 && blank_line_between(text, result[i - 1].end, result[i].begin)) {
+            ++paragraph;
+        }
+        result[i].paragraph = paragraph;
+    }
+    return result;
 }
 
-std::string TextProcessor::normalize(const std::string& data) {
-    std::vector<std::string> terms = TextProcessor::terms(data);
-    std::string normalized;
-    
-    normalized.reserve(data.size());
-    for (size_t i = 0; i < terms.size(); i++) {
-        normalized.append(terms[i]);
-        if (i != terms.size() - 1) normalized.append(" ");
-    }
-    
-    return normalized;
+std::vector<std::string> TextProcessor::terms(const std::string& text) {
+    const auto tokens = tokenize(text);
+    std::vector<std::string> result;
+    result.reserve(tokens.size());
+    for (const auto& token : tokens)
+        result.push_back(token.token);
+    return result;
+}
+
+std::string TextProcessor::normalize(const std::string& text) {
+    const auto tokens = tokenize(text);
+    return join(tokens, 0, tokens.size());
 }
 
 std::string TextProcessor::join(const std::vector<TokenInfo>& tokens,
-                                std::size_t start,
+                                std::size_t begin,
                                 std::size_t end) {
-    std::string normalized;
-    
-    for (size_t i = start; i < end; i++) {
-        if (i != start) normalized.append(" ");
-        normalized.append(tokens[i].token);
+    end = std::min(end, tokens.size());
+    std::string result;
+    for (std::size_t i = begin; i < end; ++i) {
+        if (!result.empty())
+            result.push_back(' ');
+        result += tokens[i].token;
     }
-    
-    return normalized;
+    return result;
 }
 
-std::string TextProcessor::join(const std::vector<std::string>& terms,
-                                std::size_t start,
+std::string TextProcessor::join(const std::vector<std::string>& tokens,
+                                std::size_t begin,
                                 std::size_t end) {
-    std::string normalized;
-    
-    for (size_t i = start; i < end; i++) {
-        if (i != start) normalized.append(" ");
-        normalized.append(terms[i]);
+    end = std::min(end, tokens.size());
+    std::string result;
+    for (std::size_t i = begin; i < end; ++i) {
+        if (!result.empty())
+            result.push_back(' ');
+        result += tokens[i];
     }
-    
-    return normalized;
+    return result;
 }
 
 }  // namespace aiws

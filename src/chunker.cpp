@@ -2,6 +2,7 @@
 
 #include "aiws/text_processor.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace aiws {
@@ -13,56 +14,45 @@ Chunker::Chunker(ChunkingPolicy policy) : policy_(policy) {
     }
 }
 
-std::vector<Chunk> Chunker::chunk(const Document& document, std::size_t document_order) const {
+std::vector<Chunk> Chunker::chunk(const Document& document,
+                                  std::size_t document_order) const {
+    const auto tokens = TextProcessor::tokenize(document.text());
     std::vector<Chunk> chunks;
-
-    std::vector<TokenInfo> tokens = TextProcessor::tokenize(document.text());
-
-    // empty check
-    if (tokens.empty()) return chunks;
-
-    size_t start = 0;
-    size_t sequence = 0;
+    std::size_t start = 0;
+    std::size_t sequence = 0;
 
     while (start < tokens.size()) {
-        size_t remaining = tokens.size() - start;
-        size_t end;
-
-        // last chunk
-        if (remaining <= policy_.max_tokens) {
-            end = tokens.size();
-        } else {
-            end = start + policy_.max_tokens;
-
-            size_t begin = end - policy_.paragraph_window;
-
-            for (size_t i = end; i >= begin; i--) {
-                if (tokens[i].paragraph != tokens[i - 1].paragraph) {
-                    end = i;
-                    break;
+        std::size_t end = tokens.size();
+        if (tokens.size() - start > policy_.max_tokens) {
+            const std::size_t hard_end = start + policy_.max_tokens;
+            const std::size_t earliest = hard_end - policy_.paragraph_window;
+            std::size_t preferred = hard_end;
+            bool found = false;
+            for (std::size_t boundary = earliest; boundary <= hard_end; ++boundary) {
+                if (boundary > start && boundary < tokens.size() &&
+                    tokens[boundary - 1].paragraph != tokens[boundary].paragraph) {
+                    preferred = boundary;
+                    found = true;
                 }
             }
+            end = found ? preferred : hard_end;
         }
 
-        Chunk chunk;
-        chunk.id = document.id() + "#" + std::to_string(sequence);
-        chunk.document_id = document.id();
-        chunk.document_order = document_order;
-        chunk.sequence = sequence;
-        chunk.text = TextProcessor::join(tokens, start, end);
-        chunk.token_count = end - start;
-        chunk.source_begin = tokens[start].begin;
-        chunk.source_end = tokens[end - 1].end;
+        Chunk c;
+        c.document_id = document.id();
+        c.document_order = document_order;
+        c.sequence = sequence;
+        c.id = document.id() + "#" + std::to_string(sequence);
+        c.text = TextProcessor::join(tokens, start, end);
+        c.token_count = end - start;
+        c.source_begin = tokens[start].begin;
+        c.source_end = tokens[end - 1].end;
+        chunks.push_back(std::move(c));
 
-        chunks.push_back(chunk);
-
-        sequence++;
-
-        if (end >= tokens.size()) break;
-
-        start = end - policy_.overlap;
+        if (end == tokens.size()) break;
+        start = std::max(start + 1, end - policy_.overlap);
+        ++sequence;
     }
-
     return chunks;
 }
 
