@@ -22,5 +22,5 @@ namespace aiws {
             std::unique_ptr<ChunkingStrategy> inner_;
             int delay_ms_;
             const std::atomic<bool>& cancel;
-    }
+    };
 }
