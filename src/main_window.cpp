@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
+#include <utility>
 #include <exception>
 
 namespace aiws::gui {
@@ -87,13 +88,12 @@ bool MainWindow::add_document_file(const QString& path) {
     if (!info.isFile() || !file.open(QIODevice::ReadOnly)) return false;
 
     auto doc = Document(info.absoluteFilePath().toStdString(),
-                        info.fileName().toStdString()
-                        info.readAll().toStdString());
+                        info.fileName().toStdString(),
+                        file.readAll().toStdString());
     
+    workspace_.add_document(std::move(doc));
     workspace_widget_->add_document(info.fileName());
     invalidate_corpus();
-
-    workspace_.add_document();
     
     return true;
 }

@@ -1,7 +1,6 @@
-
-        Student Name: [Your Name]
-        Student ID: [Your Student ID]
-        Project / Milestone: [e.g., Milestone 2: Multi-threaded Task Processor]
+Student Name: Tanish Ambala
+Student ID:
+Project / Milestone: Milestone 4
 
 Part 1: Summary of AI Tools Used
 
