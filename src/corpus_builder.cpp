@@ -107,6 +107,7 @@ namespace aiws::gui {
         // use iterator ptr to find job_id
         // cant used find function because job_id is a
         // struct member
+        // linear search
         auto it = jobs_.begin();
         while (it != jobs_.end()) {
             if ((*it)->id == job_id) {
@@ -116,9 +117,11 @@ namespace aiws::gui {
             it++;
         }
 
+        // iterator validity check
         if (it == jobs_.end()) throw std::out_of_range("unknown build id");
 
-        auto job = (**it);
+        // get ref, auto -> copies
+        BuildJob& job = (**it);
         job.worker.join();
 
         BuildResult result;
@@ -137,7 +140,7 @@ namespace aiws::gui {
     }
 
     size_t CorpusBuilder::job_count() const noexcept {
-        return jobs_.size;
+        return jobs_.size();
     }
 
     // emits build_finished signal
