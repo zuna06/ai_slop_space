@@ -46,4 +46,16 @@ namespace aiws::gui {
 
         QMetaObject::invokeMethod(builder, "job_done", Qt::QueuedConnection, Q_ARG(quint64, job_id));
     }
+
+    CorpusBuilder::CorpusBuilder(QObject* parent) : QObject(parent) {}
+
+    // cancels all jobs first since join() blocks
+    // then check if the worker is joinable() in a separate for loop
+    // and join() if true
+    CorpusBuilder::~CorpusBuilder() {
+        for (auto& job : jobs_) {
+            job->cancel = true;
+            job->worker.join();
+        }
+    }
 }
