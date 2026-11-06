@@ -75,8 +75,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 }
 
 void MainWindow::set_exit_callback(ExitCallback callback) noexcept {
-    // TODO
     exit_callback_ = callback;
+}
+
+bool MainWindow::add_document_file(const QString& path) {
+    return false;
+}
+
+void MainWindow::set_build_delay_ms(int ms_per_doc) {
+    
 }
 
 void MainWindow::add_document() {
