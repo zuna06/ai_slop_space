@@ -4,15 +4,14 @@ Project / Milestone: Milestone 4
 
 Part 1: Summary of AI Tools Used
 
-            Tools Used: [e.g., GitHub Copilot, ChatGPT, Claude]
-            Scope of Assistance: [Briefly describe how you used the tools.]
+            Tools Used: ChatGPT free version
 
 Part 2: Detailed Log of Substantial AI Assistance
 
             Component: [e.g., CMake Build Configuration / Thread-Safe Queue]
-            What did the AI do? [Describe the specific code, function, or setup the AI generated or assisted with.]
-            What did the AI get wrong / What was the flaw? [Describe the bug, memory leak, race condition, or logic error, if applicable.]
-            How did you fix/modify it? [Explain how you debugged it, what changes you made, and how you verified it works.]
+            What did the AI do? Boilerplate for some functions, while I write the actual code myself and then I used AI to check if my functions are correct for verification then I build and test. 
+            What did the AI get wrong / What was the flaw? Sometimes it would not find the error, and I would find it after building and testing, so I make sure to both have AI check it then do it myself as well. 
+            How did you fix/modify it? I debug the entire program myself after an AI code check, this verifies it really does work, and maybe pick up an error that the AI missed.
 
 Part 3: Student Verification Statement
 
