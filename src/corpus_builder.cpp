@@ -5,7 +5,7 @@
 #include "aiws/delaying_chunker.hpp"
 #include "aiws/retrieval_engine.hpp"
 
-//#include <QMetaObject>
+#include <QMetaObject>
 
 #include <stdexcept>
 #include <utility>
@@ -105,8 +105,8 @@ namespace aiws::gui {
  
     BuildResult CorpusBuilder::take(quint64 job_id) {
         // use iterator ptr to find job_id
-        // cant used find function because job_id is a
-        // struct member
+        // easier to use ptr arithmetic to find
+        // the struct member
         // linear search
         auto it = jobs_.begin();
         while (it != jobs_.end()) {
