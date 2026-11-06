@@ -78,30 +78,39 @@ void MainWindow::set_exit_callback(ExitCallback callback) noexcept {
     exit_callback_ = callback;
 }
 
+// processes the open file request
+// called by add_document which opens
+// the file picker dialog
 bool MainWindow::add_document_file(const QString& path) {
-    return false;
+    const QFileInfo info(path);
+    QFile file(path);
+    if (!info.isFile() || !file.open(QIODevice::ReadOnly)) return false;
+
+    auto doc = Document(info.absoluteFilePath().toStdString(),
+                        info.fileName().toStdString()
+                        info.readAll().toStdString());
+    
+    workspace_widget_->add_document(info.fileName());
+    invalidate_corpus();
+
+    workspace_.add_document();
+    
+    return true;
 }
 
 void MainWindow::set_build_delay_ms(int ms_per_doc) {
-    
+    build_delay_ms_ = ms_per_doc < 0 ? 0 : ms_per_doc;
 }
 
+// handles file dialog
+// calls add_document_file which handles file opening
 void MainWindow::add_document() {
     const QString path = QFileDialog::getOpenFileName(this, QStringLiteral("Add Document"));
     if (path.isEmpty()) return;
 
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
+    if (!add_document_file(path)) {
         status_label_->setText(QStringLiteral("Could not open file."));
-        return;
     }
-
-    const QFileInfo info(path);
-    workspace_.add_document(Document(info.absoluteFilePath().toStdString(),
-                                    info.fileName().toStdString(),
-                                    file.readAll().toStdString()));
-    workspace_widget_->add_document(info.fileName());
-    invalidate_corpus();
 }
 
 void MainWindow::build_corpus() {

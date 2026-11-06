@@ -145,6 +145,7 @@ private:
     Workspace workspace_;
     ProcessingCore processing_core_;
     bool corpus_current_{false};
+    int build_delay_ms_{0};
     ExitCallback exit_callback_{nullptr};
 
     WorkspaceWidget* workspace_widget_{nullptr};
