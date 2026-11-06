@@ -55,7 +55,7 @@ std::string ProcessingCore::normalize(const std::string& text) {
 void ProcessingCore::rebuild(const Workspace& workspace) {
     std::unordered_set<std::string> document_ids;
     std::vector<Chunk> next_chunks;
-    for (std::size_t order = 0; order < workspace.documents().size(); ++order) {
+    for (size_t order = 0; order < workspace.documents().size(); ++order) {
         const auto& doc = workspace.documents()[order];
         if (!document_ids.insert(doc.id()).second) {
             throw std::invalid_argument("duplicate document id: " + doc.id());
@@ -71,16 +71,16 @@ void ProcessingCore::rebuild(const Workspace& workspace) {
 }
 
 const std::vector<Chunk>& ProcessingCore::chunks() const noexcept { return impl_->chunks; }
-std::size_t ProcessingCore::chunk_count() const noexcept { return impl_->chunks.size(); }
+size_t ProcessingCore::chunk_count() const noexcept { return impl_->chunks.size(); }
 
-std::size_t ProcessingCore::document_frequency(const std::string& term) const {
+size_t ProcessingCore::document_frequency(const std::string& term) const {
     const auto terms = TextProcessor::terms(term);
     if (terms.empty()) return 0;
     if (terms.size() != 1) throw std::invalid_argument("term must normalize to one token");
     return impl_->index.document_frequency(terms.front());
 }
 
-std::size_t ProcessingCore::term_frequency(const std::string& term,
+size_t ProcessingCore::term_frequency(const std::string& term,
                                            const std::string& chunk_id) const {
     const auto terms = TextProcessor::terms(term);
     if (terms.empty()) return 0;
@@ -94,7 +94,7 @@ std::vector<SearchResult> ProcessingCore::search(const std::string& query, int k
 
 std::vector<ContextItem> ProcessingCore::build_context(const std::string& query,
                                                        int k,
-                                                       std::size_t token_budget) const {
+                                                       size_t token_budget) const {
     if (k < 0) throw std::invalid_argument("k must be non-negative");
     if (token_budget == 0) return {};
     return impl_->context->build(search(query, k), token_budget);

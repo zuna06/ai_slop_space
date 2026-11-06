@@ -49,9 +49,9 @@ void TermInspectorWidget::set_selected_chunk(const QString& chunk_id) {
     selected_chunk_id_ = chunk_id;
 }
 
-void TermInspectorWidget::set_statistics(std::size_t document_frequency,
+void TermInspectorWidget::set_statistics(size_t document_frequency,
                                          bool has_chunk_frequency,
-                                         std::size_t chunk_frequency) {
+                                         size_t chunk_frequency) {
     document_frequency_value_->setText(QString::number(document_frequency));
     chunk_frequency_value_->setText(has_chunk_frequency ? QString::number(chunk_frequency) : QString());
 }

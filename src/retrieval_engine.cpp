@@ -34,10 +34,10 @@ std::vector<SearchResult> RetrievalEngine::search(const std::string& query, int 
     }
 
     struct Accum {
-        double base{}; std::size_t matched{};
+        double base{}; size_t matched{};
     };
     
-    std::unordered_map<std::size_t, Accum> accum;
+    std::unordered_map<size_t, Accum> accum;
     const double n = static_cast<double>(chunks.size());
 
     for (const auto& term : terms) {
@@ -77,8 +77,8 @@ std::vector<SearchResult> RetrievalEngine::search(const std::string& query, int 
         return ca.sequence < cb.sequence;
     });
 
-    if (static_cast<std::size_t>(k) < results.size())
-        results.resize(static_cast<std::size_t>(k));
+    if (static_cast<size_t>(k) < results.size())
+        results.resize(static_cast<size_t>(k));
     
     return results;
 }

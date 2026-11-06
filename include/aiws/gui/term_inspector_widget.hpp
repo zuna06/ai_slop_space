@@ -43,9 +43,9 @@ public:
      * @param has_chunk_frequency Whether a selected chunk frequency is available.
      * @param chunk_frequency Frequency of the term in the selected chunk when available.
      */
-    void set_statistics(std::size_t document_frequency,
+    void set_statistics(size_t document_frequency,
                         bool has_chunk_frequency,
-                        std::size_t chunk_frequency);
+                        size_t chunk_frequency);
 
     /** @brief Clears all displayed term statistics. */
     void clear_statistics();

@@ -40,8 +40,11 @@ namespace aiws::gui {
         Q_OBJECT
 
         public:
-            CorpusBuilder(QObject* parent);
-            ~CorpusBuilder();
+            // explicit prevents a QObject from converting
+            // into a CorpusBuilder, edge case
+            // NOTE: add tests for this
+            explicit CorpusBuilder(QObject* parent);
+            ~CorpusBuilder() override;
 
             // delete copy constructors
             // CorpusBuilder shouledd not be allowed to be copied
@@ -50,6 +53,13 @@ namespace aiws::gui {
             CorpusBuilder(const CorpusBuilder&) = delete;
             CorpusBuilder& operator=(const CorpusBuilder&) = delete;
 
+            // using quint64 because it the job id gets passed to Qt's
+            // queued call
+            // best practice to pass lib types if using its api
+            // other values use standard lib types
+            quint64 start(Workspace workspace, std::uint64_t workspace_id, int delay_ms);
+            BuildResult take(quint64 job_id);
+            size_t job_count() const noexcept;
     };
 
 }

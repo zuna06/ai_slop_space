@@ -71,8 +71,8 @@ void SearchResultModel::clear() {
 }
 
 const SearchResult* SearchResultModel::result_at(int row) const noexcept {
-    if (row < 0 || static_cast<std::size_t>(row) >= results_.size()) return nullptr;
-    return &results_[static_cast<std::size_t>(row)];
+    if (row < 0 || static_cast<size_t>(row) >= results_.size()) return nullptr;
+    return &results_[static_cast<size_t>(row)];
 }
 
 }  // namespace aiws::gui

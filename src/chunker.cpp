@@ -15,20 +15,20 @@ Chunker::Chunker(ChunkingPolicy policy) : policy_(policy) {
 }
 
 std::vector<Chunk> Chunker::chunk(const Document& document,
-                                  std::size_t document_order) const {
+                                  size_t document_order) const {
     const auto tokens = TextProcessor::tokenize(document.text());
     std::vector<Chunk> chunks;
-    std::size_t start = 0;
-    std::size_t sequence = 0;
+    size_t start = 0;
+    size_t sequence = 0;
 
     while (start < tokens.size()) {
-        std::size_t end = tokens.size();
+        size_t end = tokens.size();
         if (tokens.size() - start > policy_.max_tokens) {
-            const std::size_t hard_end = start + policy_.max_tokens;
-            const std::size_t earliest = hard_end - policy_.paragraph_window;
-            std::size_t preferred = hard_end;
+            const size_t hard_end = start + policy_.max_tokens;
+            const size_t earliest = hard_end - policy_.paragraph_window;
+            size_t preferred = hard_end;
             bool found = false;
-            for (std::size_t boundary = earliest; boundary <= hard_end; ++boundary) {
+            for (size_t boundary = earliest; boundary <= hard_end; ++boundary) {
                 if (boundary > start && boundary < tokens.size() &&
                     tokens[boundary - 1].paragraph != tokens[boundary].paragraph) {
                     preferred = boundary;

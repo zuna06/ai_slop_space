@@ -7,7 +7,7 @@ namespace aiws {
 class ContextBuilder final : public ContextStrategy {
 public:
     std::vector<ContextItem> build(const std::vector<SearchResult>& ranked,
-                                   std::size_t token_budget) const override;
+                                   size_t token_budget) const override;
 };
 
 }  // namespace aiws

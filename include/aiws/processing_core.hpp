@@ -15,9 +15,9 @@ namespace aiws {
 
 class ProcessingCore {
 public:
-    static constexpr std::size_t kMaxChunkTokens = 120;
-    static constexpr std::size_t kChunkOverlap = 20;
-    static constexpr std::size_t kParagraphPreferenceWindow = 20;
+    static constexpr size_t kMaxChunkTokens = 120;
+    static constexpr size_t kChunkOverlap = 20;
+    static constexpr size_t kParagraphPreferenceWindow = 20;
 
     ProcessingCore();
     ProcessingCore(std::unique_ptr<ChunkingStrategy> chunking,
@@ -34,16 +34,16 @@ public:
 
     void rebuild(const Workspace& workspace);
     const std::vector<Chunk>& chunks() const noexcept;
-    std::size_t chunk_count() const noexcept;
+    size_t chunk_count() const noexcept;
 
-    std::size_t document_frequency(const std::string& term) const;
-    std::size_t term_frequency(const std::string& term,
+    size_t document_frequency(const std::string& term) const;
+    size_t term_frequency(const std::string& term,
                                const std::string& chunk_id) const;
 
     std::vector<SearchResult> search(const std::string& query, int k) const;
     std::vector<ContextItem> build_context(const std::string& query,
                                            int k,
-                                           std::size_t token_budget) const;
+                                           size_t token_budget) const;
 
 private:
     struct Impl;

@@ -12,13 +12,13 @@ CorpusIndex::CorpusIndex(const std::vector<Chunk>& chunks) { build(chunks);
 
 void CorpusIndex::build(const std::vector<Chunk>& chunks) {
     std::unordered_map<std::string, std::vector<Posting>> next_postings;
-    std::unordered_map<std::string, std::size_t> next_lookup;
+    std::unordered_map<std::string, size_t> next_lookup;
 
-    for (std::size_t i = 0; i < chunks.size(); ++i) {
+    for (size_t i = 0; i < chunks.size(); ++i) {
         if (!next_lookup.emplace(chunks[i].id, i).second) {
             throw std::invalid_argument("duplicate chunk id: " + chunks[i].id);
         }
-        std::unordered_map<std::string, std::size_t> frequency;
+        std::unordered_map<std::string, size_t> frequency;
         for (const auto& term : TextProcessor::terms(chunks[i].text)) ++frequency[term];
         
         for (const auto& [term, count] : frequency) {
@@ -30,12 +30,12 @@ void CorpusIndex::build(const std::vector<Chunk>& chunks) {
     chunk_by_id_ = std::move(next_lookup);
 }
 
-std::size_t CorpusIndex::document_frequency(const std::string& normalized_term) const noexcept {
+size_t CorpusIndex::document_frequency(const std::string& normalized_term) const noexcept {
     const auto it = postings_.find(normalized_term);
     return it == postings_.end() ? 0 : it->second.size();
 }
 
-std::size_t CorpusIndex::term_frequency(const std::string& normalized_term, const std::string& chunk_id) const noexcept {
+size_t CorpusIndex::term_frequency(const std::string& normalized_term, const std::string& chunk_id) const noexcept {
     const auto lookup = chunk_by_id_.find(chunk_id);
     
     if (lookup == chunk_by_id_.end()) return 0;
@@ -63,7 +63,7 @@ const Chunk* CorpusIndex::find_chunk(const std::vector<Chunk>& chunks,
     return &chunks[it->second];
 }
 
-std::size_t CorpusIndex::chunk_index(const std::string& chunk_id) const {
+size_t CorpusIndex::chunk_index(const std::string& chunk_id) const {
     const auto it = chunk_by_id_.find(chunk_id);
     if (it == chunk_by_id_.end()) throw std::out_of_range("unknown chunk id");
     return it->second;

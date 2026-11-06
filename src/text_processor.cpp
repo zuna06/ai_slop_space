@@ -17,10 +17,10 @@ char lower_ascii(unsigned char c) {
     return static_cast<char>(c);
 }
 
-bool blank_line_between(const std::string& text, std::size_t a, std::size_t b) {
+bool blank_line_between(const std::string& text, size_t a, size_t b) {
     bool first_newline = false;
     
-    for (std::size_t i = a; i < b;) {
+    for (size_t i = a; i < b;) {
         const char ch = text[i];
         if (ch == '\r' || ch == '\n') {
             if (ch == '\r' && i + 1 < b && text[i + 1] == '\n') ++i;
@@ -42,16 +42,16 @@ bool blank_line_between(const std::string& text, std::size_t a, std::size_t b) {
 std::vector<TokenInfo> TextProcessor::tokenize(const std::string& text) {
     std::vector<TokenInfo> result;
     std::string current;
-    std::size_t token_begin = 0;
+    size_t token_begin = 0;
 
-    auto finish = [&](std::size_t end) {
+    auto finish = [&](size_t end) {
         if (!current.empty()) {
             result.push_back(TokenInfo{current, token_begin, end, 0});
             current.clear();
         }
     };
 
-    for (std::size_t i = 0; i < text.size(); ++i) {
+    for (size_t i = 0; i < text.size(); ++i) {
         const unsigned char c = static_cast<unsigned char>(text[i]);
         if (is_ascii_alnum(c)) {
             if (current.empty())
@@ -63,8 +63,8 @@ std::vector<TokenInfo> TextProcessor::tokenize(const std::string& text) {
     }
     finish(text.size());
 
-    std::size_t paragraph = 0;
-    for (std::size_t i = 0; i < result.size(); ++i) {
+    size_t paragraph = 0;
+    for (size_t i = 0; i < result.size(); ++i) {
         if (i > 0 && blank_line_between(text, result[i - 1].end, result[i].begin)) {
             ++paragraph;
         }
@@ -88,11 +88,11 @@ std::string TextProcessor::normalize(const std::string& text) {
 }
 
 std::string TextProcessor::join(const std::vector<TokenInfo>& tokens,
-                                std::size_t begin,
-                                std::size_t end) {
+                                size_t begin,
+                                size_t end) {
     end = std::min(end, tokens.size());
     std::string result;
-    for (std::size_t i = begin; i < end; ++i) {
+    for (size_t i = begin; i < end; ++i) {
         if (!result.empty())
             result.push_back(' ');
         result += tokens[i].token;
@@ -101,11 +101,11 @@ std::string TextProcessor::join(const std::vector<TokenInfo>& tokens,
 }
 
 std::string TextProcessor::join(const std::vector<std::string>& tokens,
-                                std::size_t begin,
-                                std::size_t end) {
+                                size_t begin,
+                                size_t end) {
     end = std::min(end, tokens.size());
     std::string result;
-    for (std::size_t i = begin; i < end; ++i) {
+    for (size_t i = begin; i < end; ++i) {
         if (!result.empty())
             result.push_back(' ');
         result += tokens[i];
