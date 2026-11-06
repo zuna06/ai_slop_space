@@ -78,7 +78,7 @@ namespace aiws::gui {
         private slots:
             // from worker thread when its build is done
             void job_done(quint64 job_id);
-            e
+
         private:
             // internal struct for the build jobs state and info
             // kept private since it's only used within this class
@@ -96,7 +96,7 @@ namespace aiws::gui {
             // owned by this class
             // in vector for resizing and access
             std::vector<std::unique_ptr<BuildJob>> jobs_;
-            quint64_t next_id{1};
+            quint64 next_id{1};
     };
 
 }
