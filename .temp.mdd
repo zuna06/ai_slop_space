@@ -1,0 +1,76 @@
+M4 Design Note
+
+Each build runs on its own std::thread using a copy of the Workspace and a new 
+ProcessingCore. The GUI thread receives the finished corpus and accepts it only 
+if its workspace generation still matches the current one.
+
+1. Components and threads
+
+MainWindow (GUI thread): owns the Workspace, the current ProcessingCore, workspace_generation_, and the 
+corpus state. Decides whether a finished build is accepted or rejected.
+
+Widgets and SearchResultModel (GUI thread): unchanged from M3.
+
+CorpusBuilder, a new QObject (GUI thread): start(snapshot, generation, delay) launches a job. It owns 
+all BuildJobs. When a job reports completion, it joins the thread and emits build_finished(id). Its destructor 
+cancels and joins every job.
+
+BuildJob, a new struct (owned on the GUI thread): holds the std::thread, a std::future<ProcessingCore>, 
+a std::atomic<bool> cancel flag, and the generation it was started for.
+
+Worker function (worker thread): builds the ProcessingCore and sets the promise (value or exception). 
+Its last action is QMetaObject::invokeMethod(builder, "on_job_done", Qt::QueuedConnection, ...). It never touches widgets.
+
+DelayingChunker, a new ChunkingStrategy (worker thread): sleeps delay_ms per document in 10 ms slices, 
+checking the cancel flag, then calls the real Chunker. This slows the real build path for --build-delay-ms.
+
+2. Corpus states (GUI thread only)
+
+NotBuilt -> Build Corpus -> Building(g), where g is the current generation.
+Building(g) -> success and g is still current -> Current (chunk count shown).
+Building(g) -> failure and g is still current -> Failed (error shown).
+Current or Failed -> Build Corpus -> Building(g).
+Any state -> Add Document or Reset -> NotBuilt, and workspace_generation_ increases.
+Any state -> a result whose generation is not current -> ignored, state unchanged.
+
+Search, Inspect, and Context are enabled only in Current. Build Corpus is disabled during Building.
+
+3. Threatening sequences
+
+Build, then Add Document, then the build finishes (R2): generation mismatch, result discarded.
+Build, then Reset, then the build finishes (R2): generation mismatch, result discarded.
+Build A, Add, Build B, then A finishes before or after B (R2): only B's generation matches.
+
+Duplicate document IDs make rebuild throw (R3): the worker calls set_exception; future.get() rethrows on 
+the GUI thread; state becomes Failed.
+
+Search, Inspect, or Context during a build (R2): disabled unless the state is Current.
+The Workspace changes while the worker reads it (R2): the worker reads only its own snapshot.
+Exit during a build (R4): the CorpusBuilder destructor sets cancel and joins.
+Many builds over time (R4): each job is joined and erased when it reports.
+
+Walkthrough A, Add during a build: The Workspace holds {a} and the generation is 1. Build Corpus moves the state to 
+Building(1) and starts job J1. The user adds b, so the generation becomes 2, the state becomes NotBuilt, and outputs 
+\are cleared. J1 finishes and posts on_job_done. The GUI thread joins J1, and build_finished sees 1 != 2 and discards 
+the core. The corpus stays "Not built".
+
+Walkthrough B, Exit during a build: A build is running with a long delay. The user clicks Exit, then Yes, so quit() 
+runs and MainWindow is destroyed. The CorpusBuilder destructor sets cancel and calls join(). The worker wakes within 
+10 ms, throws BuildCancelled, posts, and returns. join() returns, and the pending queued call is discarded along with 
+the QObject. There is no detached thread and no hang.
+
+4. Ownership of one built corpus
+
+1. The GUI thread copies workspace_ into a snapshot and calls start.
+2. start keeps the future in a BuildJob and moves the promise and the snapshot into the thread.
+3. The worker builds a local ProcessingCore, then promise.set_value(std::move(core)) moves it into the promise's shared state.
+4. On the GUI thread, future.get() moves it out, and the BuildJob is erased.
+5. If accepted, it is move-assigned into processing_core_, which destroys the old corpus. If stale, the local copy is destroyed.
+6. It is destroyed when the next accepted build replaces it, on Reset, or when MainWindow is destroyed.
+
+5. Rejected alternative
+
+Rebuilding processing_core_ in place on the worker and polling an atomic "done" flag. The worker would write the same object 
+the GUI reads for Search, which is a data race without a mutex. A stale build would also overwrite the current corpus before 
+it could be rejected. Building a separate object and handing it over whole avoids both problems.
+

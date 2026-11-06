@@ -51,6 +51,23 @@ public:
      */
     void set_exit_callback(ExitCallback callback) noexcept;
 
+    // ---- M4 required public API (see specification, Section 5) ----------
+
+    /**
+     * @brief Adds the file at path exactly as the Add Document action does.
+     * @return false, changing nothing, if the file cannot be read.
+     */
+    bool add_document_file(const QString& path);
+
+    /**
+     * @brief Sets the extra build time per document for builds started after this call.
+     * @param ms_per_document Delay in milliseconds (the --build-delay-ms value).
+     */
+    void set_build_delay_ms(int ms_per_document);
+
+    // Everything below this line is the M3 design. In M4 it is yours to
+    // change: add, remove, or redesign private members, slots, and helpers.
+
 private slots:
     /** @brief Handles a request to select and add a document to the workspace. */
     void add_document();
