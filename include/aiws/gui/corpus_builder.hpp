@@ -33,7 +33,7 @@ namespace aiws::gui {
     // All builds get their own thread, copy of the Workspace,
     // and ProcessingCore
     // When a build finishes, its worker posts job_done() to
-    // the gui thread which calls build_finished(id)
+    // the gui thread which emits build_finished(id) signal
     // Then take is called to get the result and the destructor
     // cancels and joins every build that is still running
     class CorpusBuilder final : public QObject {
@@ -42,7 +42,6 @@ namespace aiws::gui {
         public:
             // explicit prevents a QObject from converting
             // into a CorpusBuilder, edge case
-            // NOTE: add tests for this
             explicit CorpusBuilder(QObject* parent);
             ~CorpusBuilder() override;
 
