@@ -8,12 +8,13 @@
 
 namespace aiws {
 
-    DelayingChunker::DelayingChunker(std::unique_ptr<ChunkingStrategy> inner, int delay_ms, const std::atomic<bool>& cancel) {
-        inner_ = std::move(inner);
-        delay_ms_ = (delay_ms < 0 ? 0 : delay_ms);
-        cancel_ = cancel;
+    DelayingChunker::DelayingChunker(std::unique_ptr<ChunkingStrategy> inner, int delay_ms, const std::atomic<bool>& cancel) 
+    :   inner_(std::move(inner)),
+        delay_ms_(delay_ms < 0 ? 0 : delay_ms),
+        cancel_(cancel)
+    {
 
-        if (!inner) throw std::invalid_argument("DelayingChunker needs an inner strategy");
+        if (!inner_) throw std::invalid_argument("DelayingChunker needs an inner strategy");
     }
 
     // using 10 ms so that the shutdown feels instead
