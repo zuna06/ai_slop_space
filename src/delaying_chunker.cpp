@@ -28,4 +28,5 @@ namespace aiws {
         if (cancel_) throw std::runtime_error("build cancelled");
         return inner_->chunk(doc, doc_order);
     }
+    
 }
