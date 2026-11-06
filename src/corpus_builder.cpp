@@ -55,7 +55,11 @@ namespace aiws::gui {
     CorpusBuilder::~CorpusBuilder() {
         for (auto& job : jobs_) {
             job->cancel = true;
-            job->worker.join();
+        }
+        for (auto& job : jobs_) {
+            if (job->worker.joinable()) {
+                job->worker.join();
+            }
         }
     }
 }
