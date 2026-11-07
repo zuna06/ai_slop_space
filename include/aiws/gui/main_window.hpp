@@ -148,8 +148,8 @@ private:
      */
     void clear_processing_outputs();
 
-    // enum for corpus state
-    enum CorpusState {
+    // enum class for corpus state
+    enum class CorpusState {
         NotBuilt,
         Building,
         Current,
@@ -158,6 +158,7 @@ private:
 
     Workspace workspace_;
     ProcessingCore processing_core_;
+    CorpusState corpus_state_{CorpusState::NotBuilt};
     std::uint64_t workspace_id_{0};
     int build_delay_ms_{0};
     CorpusBuilder* corpus_builder_{nullptr};
