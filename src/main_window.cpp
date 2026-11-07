@@ -136,9 +136,15 @@ void MainWindow::build_finished(quint64 job_id) {
 
     // stale check
     // add document or resey may have happened after this build started
+    // macro removes the stale check if defined
+    #ifndef AIWS_FAULT_ACCEPT_STALE
     if (result.workspace_id != workspace_id_) return;
-
+    #endif
     if (result.error) {
+        // drops failures instead of reporting if defined
+        #ifdef AIWS_FAULT_LOSE_FAILURE
+        return;
+        #endif
         std::string message = "unknown error";
         try {
             // try to rethrow original error
