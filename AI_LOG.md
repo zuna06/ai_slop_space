@@ -11,7 +11,10 @@ Part 2: Detailed Log of Substantial AI Assistance
             What the AI did:
             
             Boilerplate for some functions, while I write the actual code myself and then I used AI to check if my functions are correct for verification then I build and test. Used it to generate the CorpusBuilder::~CorpusBuilder function.
+
+            Used AI to help me write tests, it gave me ideas on edge cases and formatting. I had an issue with trying to use the given data/public/ files for my tests, so I used AI to fix it, and it used Qt's specific types and specific functions which fixed my issue. It made the helper functions which I reformatted and used in my tests that I wrote.
             
+            It also came up with the QSignalSpy idea which was helpful for testing when a build has finished since the finished.count() goes up by one. 
             
             What I fixed + what the AI got wrong
             
