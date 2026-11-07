@@ -5,6 +5,8 @@
 #include "aiws/processing_core.hpp"
 #include "aiws/workspace.hpp"
 
+#include <cstdint>
+
 class QLabel;
 class QPushButton;
 class QString;
@@ -13,6 +15,7 @@ class QWidget;
 namespace aiws::gui {
 
 class ContextWidget;
+class CorpusBuilder;
 class SearchWidget;
 class TermInspectorWidget;
 class WorkspaceWidget;
@@ -123,6 +126,9 @@ private slots:
      */
     void exit_application();
 
+    // collects a finished background build and accepts or rejects it
+    void build_finished(quint64 job_id);
+
 private:
     /**
      * @brief Updates availability of actions that depend on current application state.
@@ -142,10 +148,19 @@ private:
      */
     void clear_processing_outputs();
 
+    // enum for corpus state
+    enum CorpusState {
+        NotBuilt,
+        Building,
+        Current,
+        Failed
+    };
+
     Workspace workspace_;
     ProcessingCore processing_core_;
-    bool corpus_current_{false};
+    std::uint64_t workspace_id_{0};
     int build_delay_ms_{0};
+    CorpusBuilder* corpus_builder_{nullptr};
     ExitCallback exit_callback_{nullptr};
 
     WorkspaceWidget* workspace_widget_{nullptr};
