@@ -1,0 +1,588 @@
+﻿commit 9cc3c2c0f4b5e8b56e28963138c7ae80ac8d2e1d
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-07 17:33:22 -0500
+
+    feat: added tests
+
+ tests/student_tests.cpp | 124 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 120 insertions(+), 4 deletions(-)
+
+commit df4390827727c8df768ba6f2e187f7bb7728da3e
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 22:41:30 -0500
+
+    feat: added some R2 tests
+
+ AI_LOG.md               |   3 +
+ tests/student_tests.cpp | 148 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 150 insertions(+), 1 deletion(-)
+
+commit e693267dff585a4a0fdd79253f6835203de1c5e5
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 21:19:02 -0500
+
+    feat: added macro checks
+
+ src/main_window.cpp | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+commit 409ec442d95cdae7190c974e8247c76141b1a8bf
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 20:58:04 -0500
+
+    feat: updated main window, runs corpus builder in background, checks for stale result and workspace id
+
+ CMakeLists.txt                   |  3 ++
+ include/aiws/gui/main_window.hpp |  5 +--
+ src/main_window.cpp              | 78 +++++++++++++++++++++++++++++++++-------
+ 3 files changed, 72 insertions(+), 14 deletions(-)
+
+commit 4a01aec0f031a27172c6bdf4871f6f91e9fb4060
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 20:30:52 -0500
+
+    feat: update members
+
+ include/aiws/gui/main_window.hpp | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+commit c8ec137440378ac5aaa58a10dc5184c62e3a4317
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 11:42:31 -0500
+
+    fix: moved run_build into anonymous namespace, it is only used by the worker function
+
+ src/corpus_builder.cpp | 72 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 36 insertions(+), 36 deletions(-)
+
+commit 9cf4a5a2a693f382c52eeac9c982ff44f0f8e1b8
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 11:40:53 -0500
+
+    fix
+
+ src/corpus_builder.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 1e94a55eaa950722096fe0a488e1b45d711dd386
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 11:39:55 -0500
+
+    fix: corpus builder syntax and runtime issues fixed, iterator checks
+
+ src/corpus_builder.cpp | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+commit 4bcf0f9abae32358c7b2739e24c9b2a813c023ce
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 11:38:39 -0500
+
+    feat: completed corpus builder
+
+ src/corpus_builder.cpp | 87 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 85 insertions(+), 2 deletions(-)
+
+commit a3e3ff77aee0ba9b638ccae6b218f6801ed10003
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:53:54 -0500
+
+    feat: update ai log
+
+ AI_LOG.md | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+commit d579fd23af1aca1e7cbbb97455763725e3588032
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:49:47 -0500
+
+    fix: corpus builder destructor
+
+ src/corpus_builder.cpp | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+commit e84f9efa9bba7d90718cf2e715f9cd2abc009caf
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:48:50 -0500
+
+    feat: corpus builder constructor and destructor
+
+ src/corpus_builder.cpp | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+commit da8f11644c97ad0032934158674a94d2a061c786
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:41:13 -0500
+
+    feat: corpus builder -> added worker function
+
+ src/corpus_builder.cpp | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+
+commit e7a2284444da8f90c36dc9fae9206a8eadb78d79
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:29:21 -0500
+
+    fix: corpus builder header
+
+ include/aiws/gui/corpus_builder.hpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+commit 88a7afeccbb132f881fbd8a0dc45a58470d81e27
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:28:12 -0500
+
+    feat: fixed corpus builder header typos
+
+ include/aiws/gui/corpus_builder.hpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 932cf88e8364a413cc3f896bd74a3b8c54e3b0bc
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:27:44 -0500
+
+    feat: corpus builder header complete
+
+ include/aiws/gui/corpus_builder.hpp | 39 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
+
+commit d674ed46b254315934313baa7effacdca7595cd6
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:14:22 -0500
+
+    feat: replaced std::size_t with size_t
+
+ include/aiws/chunker.hpp                   |  8 ++++----
+ include/aiws/chunking_strategy.hpp         |  2 +-
+ include/aiws/context_builder.hpp           |  2 +-
+ include/aiws/context_strategy.hpp          |  2 +-
+ include/aiws/corpus_index.hpp              | 12 ++++++------
+ include/aiws/gui/corpus_builder.hpp        | 14 ++++++++++++--
+ include/aiws/gui/term_inspector_widget.hpp |  4 ++--
+ include/aiws/processing_core.hpp           | 14 +++++++-------
+ include/aiws/processing_types.hpp          | 18 +++++++++---------
+ include/aiws/text_processor.hpp            | 14 +++++++-------
+ src/chunker.cpp                            | 16 ++++++++--------
+ src/context_builder.cpp                    |  6 +++---
+ src/corpus_index.cpp                       | 12 ++++++------
+ src/processing_core.cpp                    | 10 +++++-----
+ src/retrieval_engine.cpp                   |  8 ++++----
+ src/search_result_model.cpp                |  4 ++--
+ src/term_inspector_widget.cpp              |  4 ++--
+ src/text_processor.cpp                     | 26 +++++++++++++-------------
+ 18 files changed, 93 insertions(+), 83 deletions(-)
+
+commit e0b948cd843df7e33462cba514ead76ab54a166d
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 10:07:58 -0500
+
+    feat: added corpus builder -> build handler class
+
+ include/aiws/gui/corpus_builder.hpp | 55 +++++++++++++++++++++++++++++++++++++
+ src/delaying_chunker.cpp            |  1 +
+ 2 files changed, 56 insertions(+)
+
+commit 1b6e379b9dbf1d581ea4364ab3b51fb271e5be65
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 09:41:08 -0500
+
+    feat: moved constructor args to initializer lists and fixed spelling errors
+
+ include/aiws/delaying_chunker.hpp |  2 +-
+ src/delaying_chunker.cpp          | 11 ++++++-----
+ 2 files changed, 7 insertions(+), 6 deletions(-)
+
+commit f15d095f8606d3a45d605f653a4b47278b7b1224
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-06 09:35:41 -0500
+
+    feat: added custom chunking strategy
+
+ include/{ => aiws}/delaying_chunker.hpp |  2 +-
+ src/delaying_chunker.cpp                | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+
+commit da3812adf5c702780a8170e7c1dbfd6c7dd9e620
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-05 22:43:02 -0500
+
+    feat: added custom chunker header
+
+ AI_LOG.md                    |  9 ++++-----
+ include/delaying_chunker.hpp | 26 ++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 5 deletions(-)
+
+commit f62a7001a81f984211c13ccc353bb586e750667c
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-05 22:32:05 -0500
+
+    feat: fix
+
+ .gitignore                    |   6 +-
+ .temp.mdd                     |  76 --------
+ AI_LOG.md                     |  37 ++--
+ CMakeLists.txt                | 114 +++++------
+ DESIGN.md                     |   8 +-
+ DESIGN_NOTE.md                | 164 ++++++++--------
+ data/public/doc_ai.txt        |   6 +-
+ data/public/doc_retrieval.txt |   6 +-
+ data/public/doc_systems.txt   |   6 +-
+ data/public/queries.txt       |   8 +-
+ src/chunker.cpp               | 118 ++++++------
+ src/context_builder.cpp       |  58 +++---
+ src/context_widget.cpp        | 180 ++++++++---------
+ src/corpus_index.cpp          | 144 +++++++-------
+ src/document.cpp              |  28 +--
+ src/main.cpp                  |  70 ++++---
+ src/main_window.cpp           | 438 +++++++++++++++++++++---------------------
+ src/processing_core.cpp       | 206 ++++++++++----------
+ src/retrieval_engine.cpp      | 172 ++++++++---------
+ src/search_result_model.cpp   | 154 +++++++--------
+ src/search_widget.cpp         | 284 +++++++++++++--------------
+ src/term_inspector_widget.cpp | 150 +++++++--------
+ src/text_processor.cpp        | 232 +++++++++++-----------
+ src/workspace.cpp             |  34 ++--
+ src/workspace_widget.cpp      | 168 ++++++++--------
+ tests/student_tests.cpp       |   4 +-
+ 26 files changed, 1409 insertions(+), 1462 deletions(-)
+
+commit 447badf09b5ec61efe8d80c1a3ca479530e55713
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-05 21:58:06 -0500
+
+    feat: add_document_file handles file proccessing, trimmed add_document accordingly
+
+ include/aiws/gui/main_window.hpp |  1 +
+ src/main_window.cpp              | 33 +++++++++++++++++++++------------
+ 2 files changed, 22 insertions(+), 12 deletions(-)
+
+commit 6233fe4180c49b950bf3179738095dc686ef98f8
+Author: mythra-win <tanishambala67@gmail.com>
+Date:   2026-11-05 21:47:09 -0500
+
+    feat: some stub funcs
+
+ DESIGN.md           | 1 +
+ src/main_window.cpp | 9 ++++++++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+commit 05284add1a91249fcaa2fc20310090ad1db1901a
+Author: zuna06 <tanishambala94@gmail.com>
+Date:   2026-11-05 21:27:01 -0500
+
+    feat: added starter code and design_note.md
+
+ .gitignore                       |   3 ++
+ .temp.mdd                        |  76 +++++++++++++++++++++++++++++++++++
+ AI_LOG.md                        |  20 ++++++++++
+ CMakeLists.txt                   |  37 +++++++++++------
+ DESIGN.md                        |   3 ++
+ DESIGN_NOTE.md                   |  83 +++++++++++++++++++++++++++++++++++++++
+ STARTER_README.md                |  41 -------------------
+ STARTER_README.pdf               | Bin 0 -> 39600 bytes
+ include/aiws/gui/main_window.hpp |  17 ++++++++
+ tests/student_tests.cpp          |   2 +
+ 10 files changed, 229 insertions(+), 53 deletions(-)
+
+commit b2ccfd8df470080b486fe98606d53254ef211873
+Author: zuna06 <tanishambala94@gmail.com>
+Date:   2026-10-25 23:03:47 -0400
+
+    fixed missing files
+
+ src/{Document.cpp => document.cpp}   | 0
+ src/{Workspace.cpp => workspace.cpp} | 0
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+
+commit 0cbe875716e45e595f4c3fa5dad3f60941e2c221
+Author: zuna06 <tanishambala94@gmail.com>
+Date:   2026-10-25 22:59:59 -0400
+
+    feat: completed m3
+
+ CMakeLists.txt                             |  39 ++++--
+ DESIGN.md                                  |  62 ---------
+ README.md                                  |  61 ---------
+ STARTER_README.md                          |  41 ++++++
+ dockerfile                                 |  32 -----
+ include/.DS_Store                          | Bin 6148 -> 0 bytes
+ include/aiws/chunking_strategy.hpp         |  10 +-
+ include/aiws/context_strategy.hpp          |  10 +-
+ include/aiws/gui/context_widget.hpp        |  75 +++++++++++
+ include/aiws/gui/main_window.hpp           | 142 ++++++++++++++++++++
+ include/aiws/gui/resettable.hpp            |  22 ++++
+ include/aiws/gui/search_result_model.hpp   |  84 ++++++++++++
+ include/aiws/gui/search_widget.hpp         | 105 +++++++++++++++
+ include/aiws/gui/term_inspector_widget.hpp |  81 ++++++++++++
+ include/aiws/gui/workspace_widget.hpp      | 101 ++++++++++++++
+ include/aiws/retrieval_strategy.hpp        |  15 +--
+ src/context_widget.cpp                     |  91 +++++++++++++
+ src/main.cpp                               |  23 ++++
+ src/main_window.cpp                        | 203 +++++++++++++++++++++++++++++
+ src/search_result_model.cpp                |  78 +++++++++++
+ src/search_widget.cpp                      | 143 ++++++++++++++++++++
+ src/term_inspector_widget.cpp              |  76 +++++++++++
+ src/workspace_widget.cpp                   |  84 ++++++++++++
+ tests/public_tests.cpp                     |  86 ------------
+ tests/student_tests.cpp                    | 160 -----------------------
+ 25 files changed, 1382 insertions(+), 442 deletions(-)
+
+commit 76b8e05ee63fce47dc91baebfdebc95e94e73772
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-10-02 23:43:48 -0400
+
+    feat: completed m2
+
+ DESIGN.md                           |  23 ++++++
+ include/aiws/chunking_strategy.hpp  |   7 +-
+ include/aiws/context_strategy.hpp   |   7 +-
+ include/aiws/retrieval_strategy.hpp |   6 +-
+ src/processing_core.cpp             |  33 +++++---
+ tests/student_tests.cpp             | 145 +++++++++++++++++++++++++++++++++++-
+ 6 files changed, 194 insertions(+), 27 deletions(-)
+
+commit 23bf79cbf41b89a5f59e39ca347babec7aeb17c7
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-10-02 21:50:56 -0400
+
+    feat: initialize branch
+
+ .DS_Store                           | Bin 6148 -> 6148 bytes
+ CMakeLists.txt                      |  19 ++--
+ DESIGN.md                           |  50 +++++----
+ README.md                           |  61 ++++++++---
+ data/.DS_Store                      | Bin 6148 -> 0 bytes
+ dockerfile                          |  32 ++++++
+ include/.DS_Store                   | Bin 6148 -> 6148 bytes
+ include/aiws/chunker.hpp            |   8 +-
+ include/aiws/chunking_strategy.hpp  |  27 +++++
+ include/aiws/context_builder.hpp    |   9 +-
+ include/aiws/context_strategy.hpp   |  26 +++++
+ include/aiws/corpus_index.hpp       |   2 +-
+ include/aiws/processing_core.hpp    |  10 +-
+ include/aiws/retrieval_engine.hpp   |  10 +-
+ include/aiws/retrieval_strategy.hpp |  29 ++++++
+ include/aiws/text_processor.hpp     |   1 -
+ src/Workspace.cpp                   |   4 +-
+ src/chunker.cpp                     |  74 ++++++--------
+ src/context_builder.cpp             |  44 +++-----
+ src/corpus_index.cpp                |  91 +++++++----------
+ src/processing_core.cpp             | 116 ++++++++++-----------
+ src/retrieval_engine.cpp            | 142 +++++++++++---------------
+ src/text_processor.cpp              | 196 +++++++++++++++---------------------
+ tests/public_tests.cpp              | 115 ++++++++++++---------
+ tests/student_tests.cpp             |  17 ++++
+ 25 files changed, 584 insertions(+), 499 deletions(-)
+
+commit e9e8cfd22ca17e1346368c68a904ce07f164be48
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 02:16:51 -0400
+
+    fix: para boundary test fix
+
+ src/chunker.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit fc10437bfe1874e7504f62827040910269ebed87
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 02:14:54 -0400
+
+    fix: fixed includes AGAIN
+
+ include/aiws/chunker.hpp | 1 -
+ src/chunker.cpp          | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+commit a8e4d461b88e057f0eafa5d95f5b0f16f92578d3
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 02:12:31 -0400
+
+    fix: fixed includes again lol
+
+ include/aiws/corpus_index.hpp | 2 ++
+ src/corpus_index.cpp          | 2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 372b9b34643ff865fe47c93b0b3809f9b99e0b2b
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 02:11:27 -0400
+
+    fix: fixed includes
+
+ include/aiws/context_builder.hpp  | 1 -
+ include/aiws/corpus_index.hpp     | 4 ----
+ include/aiws/processing_core.hpp  | 9 ++-------
+ include/aiws/retrieval_engine.hpp | 5 -----
+ src/context_builder.cpp           | 2 ++
+ src/corpus_index.cpp              | 5 +++++
+ src/processing_core.cpp           | 8 ++++++++
+ src/retrieval_engine.cpp          | 6 ++++++
+ 8 files changed, 23 insertions(+), 17 deletions(-)
+
+commit 4135a38326cd456361eb211528207b46cb07849c
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 02:03:07 -0400
+
+    fix: cleanup
+
+ src/processing_core.cpp  | 2 ++
+ src/retrieval_engine.cpp | 2 +-
+ src/text_processor.cpp   | 1 -
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+
+commit 3fbc7b6fe3a561cdd74c2cbee926ce49530a8b38
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 02:00:01 -0400
+
+    fix: missing cmath include and explicit cast
+
+ include/aiws/retrieval_engine.hpp | 1 +
+ src/retrieval_engine.cpp          | 4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+commit 5bccc25de43e1eed324ea4f8372d994351ae785e
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 01:56:41 -0400
+
+    feat: bug fixes and answered design questions
+
+ DESIGN.md                | 9 +++++++++
+ src/corpus_index.cpp     | 4 ++--
+ src/processing_core.cpp  | 4 ++--
+ src/retrieval_engine.cpp | 8 ++++++--
+ src/text_processor.cpp   | 4 ++--
+ 5 files changed, 21 insertions(+), 8 deletions(-)
+
+commit da5afb75f4e08e8dcd335f751feeb2174ca16985
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-20 00:41:09 -0400
+
+    feat: completed m1
+
+ include/aiws/chunker.hpp          |   1 +
+ include/aiws/context_builder.hpp  |   1 +
+ include/aiws/corpus_index.hpp     |   2 +
+ include/aiws/processing_core.hpp  |   8 +++
+ include/aiws/retrieval_engine.hpp |   4 ++
+ src/chunker.cpp                   |  54 +++++++++++++-
+ src/context_builder.cpp           |  38 ++++++++--
+ src/corpus_index.cpp              |  80 ++++++++++++++++-----
+ src/processing_core.cpp           |  91 ++++++++++++++++-------
+ src/retrieval_engine.cpp          |  95 +++++++++++++++++++++---
+ src/text_processor.cpp            | 148 +++++++++++++++++++++++++++++++++-----
+ 11 files changed, 442 insertions(+), 80 deletions(-)
+
+commit ac3314fbe8c1a11d1eb7759c4fef634f10d4ad25
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-19 20:10:50 -0400
+
+    feat: m1 boilerplate
+
+ .DS_Store                         | Bin 6148 -> 6148 bytes
+ .gitignore                        |   4 --
+ CMakeLists.txt                    |  32 +++++-----
+ DESIGN.md                         |  28 ++++-----
+ Dockerfile                        |  20 ------
+ README.md                         |  29 ++++++++-
+ data/.DS_Store                    | Bin 0 -> 6148 bytes
+ data/public/doc_ai.txt            |   3 +
+ data/public/doc_retrieval.txt     |   3 +
+ data/public/doc_systems.txt       |   3 +
+ data/public/queries.txt           |   4 ++
+ include/.DS_Store                 | Bin 0 -> 6148 bytes
+ include/Document.hpp              |  37 -----------
+ include/Message.hpp               |  37 -----------
+ include/Prompt.hpp                |  31 ----------
+ include/Workspace.hpp             |  51 ---------------
+ include/aiws/chunker.hpp          |  27 ++++++++
+ include/aiws/context_builder.hpp  |  16 +++++
+ include/aiws/corpus_index.hpp     |  36 +++++++++++
+ include/aiws/document.hpp         |  22 +++++++
+ include/aiws/processing_core.hpp  |  46 ++++++++++++++
+ include/aiws/processing_types.hpp |  38 ++++++++++++
+ include/aiws/retrieval_engine.hpp |  22 +++++++
+ include/aiws/text_processor.hpp   |  30 +++++++++
+ include/aiws/workspace.hpp        |  19 ++++++
+ src/Document.cpp                  |  69 +++------------------
+ src/Message.cpp                   |  35 -----------
+ src/Prompt.cpp                    |  42 -------------
+ src/Workspace.cpp                 |  74 +++-------------------
+ src/chunker.cpp                   |  19 ++++++
+ src/context_builder.cpp           |  11 ++++
+ src/corpus_index.cpp              |  44 +++++++++++++
+ src/main.cpp                      |   7 ---
+ src/processing_core.cpp           |  61 ++++++++++++++++++
+ src/retrieval_engine.cpp          |  21 +++++++
+ src/text_processor.cpp            |  35 +++++++++++
+ tests/public_tests.cpp            |  69 +++++++++++++++++++++
+ tests/testworkspace.cpp           | 127 --------------------------------------
+ text/sample.txt                   |   1 -
+ 39 files changed, 605 insertions(+), 548 deletions(-)
+
+commit 0a903791dc289d929e0d3b3237132f7d2cc4c4f7
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-04 21:46:18 -0400
+
+    fix: test functions create and delete test files
+
+ tests/testworkspace.cpp | 9 +++++++--
+ text/empty.txt          | 0
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+commit e242fbaf01d6b73c0c67d3df7ed39ba24fc1f15f
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-04 21:29:34 -0400
+
+    fix: path issue in Document::load calls
+
+ tests/testworkspace.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 93b5b8e1bad8f9128a4825b7c17ba4b8c7505bfc
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-04 21:10:03 -0400
+
+    feat: added tests + bug fixes
+
+ DESIGN.md               |  9 +++++
+ src/Document.cpp        | 11 +-----
+ tests/testworkspace.cpp | 98 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ text/empty.txt          |  0
+ 4 files changed, 107 insertions(+), 11 deletions(-)
+
+commit 18ef0ff6524789c01458cf319189a076ae3230e1
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-04 18:02:59 -0400
+
+    feat: completed core classes
+
+ README.md         | 26 +-----------------------
+ src/Document.cpp  | 61 +++++++++++++++++++++++++++++++++++++------------------
+ src/Message.cpp   | 27 +++++++++---------------
+ src/Prompt.cpp    | 35 +++++++++++++++----------------
+ src/Workspace.cpp | 55 +++++++++++++++++++------------------------------
+ 5 files changed, 91 insertions(+), 113 deletions(-)
+
+commit 610718d6ce71df1d89bee841be0db6f24f72d624
+Author: blahaj-desktop <tanishambala94@gmail.com>
+Date:   2026-09-04 15:48:25 -0400
+
+    feat: boilerplate
+
+ .DS_Store               | Bin 0 -> 6148 bytes
+ .gitignore              |   4 +++
+ CMakeLists.txt          |  24 ++++++++++++++
+ DESIGN.md               |  13 ++++++++
+ Dockerfile              |  20 +++++++++++
+ README.md               |  25 ++++++++++++++
+ include/Document.hpp    |  37 +++++++++++++++++++++
+ include/Message.hpp     |  37 +++++++++++++++++++++
+ include/Prompt.hpp      |  31 +++++++++++++++++
+ include/Workspace.hpp   |  51 ++++++++++++++++++++++++++++
+ src/Document.cpp        |  51 ++++++++++++++++++++++++++++
+ src/Message.cpp         |  42 +++++++++++++++++++++++
+ src/Prompt.cpp          |  41 +++++++++++++++++++++++
+ src/Workspace.cpp       |  86 ++++++++++++++++++++++++++++++++++++++++++++++++
+ src/main.cpp            |   7 ++++
+ tests/testworkspace.cpp |  28 ++++++++++++++++
+ text/sample.txt         |   1 +
+ 17 files changed, 498 insertions(+)

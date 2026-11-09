@@ -14,13 +14,13 @@ namespace aiws {
         public:
             DelayingChunker(std::unique_ptr<ChunkingStrategy> inner,
                             int delay_ms,
-                            const std::atomic<bool>& cancel);
+                            std::shared_ptr<const std::atomic<bool>> cancel);
 
             std::vector<Chunk> chunk(const Document& doc, size_t doc_order) const override;
 
         private:
             std::unique_ptr<ChunkingStrategy> inner_;
             int delay_ms_;
-            const std::atomic<bool>& cancel_;
+            std::shared_ptr<const std::atomic<bool>> cancel_;
     };
 }

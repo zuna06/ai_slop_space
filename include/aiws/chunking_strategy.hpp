@@ -12,7 +12,7 @@ class ChunkingStrategy {
 public:
     virtual ~ChunkingStrategy() = default;
     virtual std::vector<Chunk> chunk(const Document& document,
-                                     size_t document_order) const = 0;
+                                     std::size_t document_order) const = 0;
 };
 
 }  // namespace aiws

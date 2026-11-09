@@ -21,7 +21,7 @@ namespace aiws::gui {
         void run_build(
             Workspace workspace,
             int delay_ms,
-            const std::atomic<bool>& cancel,
+            std::shared_ptr<const std::atomic<bool>> cancel,
             std::promise<ProcessingCore> promise,
             CorpusBuilder* builder,
             quint64 job_id
@@ -57,7 +57,7 @@ namespace aiws::gui {
     // and join() if true
     CorpusBuilder::~CorpusBuilder() {
         for (auto& job : jobs_) {
-            job->cancel = true;
+            job->cancel->store(true);
         }
         for (auto& job : jobs_) {
             if (job->worker.joinable()) {
@@ -77,22 +77,12 @@ namespace aiws::gui {
 
         job->result = promise.get_future();
 
-        // std::thread does not pass arguments by reference by itself
-        // passing cancel is copied into the thread's storage
-        // but cancel needs to be shared across functions
-        // std::cref wraps the cancel reference into a
-        // std::reference_wrapper object that the thread can copy
-        // but this time when the object is unwrapped and used 
-        // the reference will point back to the original BuildJob
-        // cancel
-        // std::cref vs std::ref
-        // using cref because it is read only since the worker only 
-        // needs to see the value of cancel
+        // The finished core keeps its chunker, so it also shares ownership of the flag.
         job->worker = std::thread(
             run_build, 
             std::move(workspace), 
             delay_ms,
-            std::cref(job->cancel),
+            job->cancel,
             std::move(promise),
             this,
             job->id

@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QMetaObject>
 
 #include <utility>
 #include <exception>
@@ -79,6 +80,25 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     update_action_states();
 }
 
+MainWindow::~MainWindow() {
+    delete corpus_builder_;
+    corpus_builder_ = nullptr;
+    ipc_server_.stop();
+}
+
+void MainWindow::start_ipc(const std::string& socket_path) {
+    // lambda for add
+    auto queue_add = [this](const std::string& path) {
+        QMetaObject::invokeMethod(this, [this, file = QString::fromStdString(path)]() {
+            if (!add_document_file(file)) {
+                status_label_->setText(QStringLiteral("Could not open file."));
+            }
+        }, Qt::QueuedConnection);
+    };
+
+    ipc_server_.start(socket_path, std::move(queue_add));
+}
+
 void MainWindow::set_exit_callback(ExitCallback callback) noexcept {
     exit_callback_ = callback;
 }
@@ -135,7 +155,7 @@ void MainWindow::build_finished(quint64 job_id) {
     BuildResult result = corpus_builder_->take(job_id);
 
     // stale check
-    // add document or resey may have happened after this build started
+    // add document or reset may have happened after this build started
     // macro removes the stale check if defined
     #ifndef AIWS_FAULT_ACCEPT_STALE
     if (result.workspace_id != workspace_id_) return;

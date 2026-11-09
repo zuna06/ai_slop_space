@@ -86,7 +86,7 @@ namespace aiws::gui {
             struct BuildJob {
                 quint64 id{};
                 std::uint64_t workspace_id{};
-                std::atomic<bool> cancel{false};
+                std::shared_ptr<std::atomic<bool>> cancel = std::make_shared<std::atomic<bool>>(false);
                 std::future<ProcessingCore> result;
                 std::thread worker;
             };

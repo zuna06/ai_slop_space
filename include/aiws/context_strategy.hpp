@@ -11,7 +11,7 @@ class ContextStrategy {
 public:
     virtual ~ContextStrategy() = default;
     virtual std::vector<ContextItem> build(const std::vector<SearchResult>& ranked,
-                                           size_t token_budget) const = 0;
+                                           std::size_t token_budget) const = 0;
 };
 
 }  // namespace aiws

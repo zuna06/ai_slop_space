@@ -24,6 +24,14 @@ Part 2: Detailed Log of Substantial AI Assistance
             this is blocking since join blocks until the thread joins. So instead I have 2 for loops, the first one sets all worker->cancel members to true,
             then checks if the worker is joinable with joinable() then I call join() on them.
 
+            CR-1 PAIR PROGRAMMING SECTION
+            My partner did not respond to my emails or the TA's email so I did this part by myself, using the free version of ChatGPT to assist me. I used it to help outline the code and some functions, and I used it to check my ideas against the requirements.
+            In the MainWindow::start_ipc function I used it to clean up my code, originally I was using 2 functions extra for the invokeMethod and add_document_file request, because of a method I saw online, but the AI suggested using a lambda instead so I used that. For aiws_send it gave me suggested on error checking and status checking and what types of data structures to use. The main thing the AI did was giving me ideas or hints for what types of structs I would need, or what headers and functions I would need to implement. It also suggested small tweaks, like in IPCServer::stop() function I wasn't aware of the shutdown() function but it recommended to add that before closing the fd.
+
+            At the end of CR1 once I had finally completed everything, I used AI to check my code and refactor it while keeping the application state and my code's original functions.
+
+            It made several changes, like
+
 Part 3: Student Verification Statement
 
 I affirm that I have thoroughly reviewed all AI-assisted code listed above, that I fully understand how it operates within the broader application architecture, and that I am able to modify or debug it independently.

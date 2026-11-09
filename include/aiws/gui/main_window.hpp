@@ -4,8 +4,10 @@
 
 #include "aiws/processing_core.hpp"
 #include "aiws/workspace.hpp"
+#include "aiws/gui/ipc_server.hpp"
 
 #include <cstdint>
+#include <string>
 
 class QLabel;
 class QPushButton;
@@ -47,6 +49,8 @@ public:
      */
     explicit MainWindow(QWidget* parent = nullptr);
 
+    ~MainWindow() override;
+
     /**
      * @brief Registers the callback invoked when the user requests Exit.
      * @param callback Function pointer to invoke for the Exit action. A null
@@ -67,6 +71,9 @@ public:
      * @param ms_per_document Delay in milliseconds (the --build-delay-ms value).
      */
     void set_build_delay_ms(int ms_per_document);
+
+    // starts up the ipc server for adding documents
+    void start_ipc(const std::string& socket_path);
 
     // Everything below this line is the M3 design. In M4 it is yours to
     // change: add, remove, or redesign private members, slots, and helpers.
@@ -163,6 +170,7 @@ private:
     int build_delay_ms_{0};
     CorpusBuilder* corpus_builder_{nullptr};
     ExitCallback exit_callback_{nullptr};
+    IPCServer ipc_server_;
 
     WorkspaceWidget* workspace_widget_{nullptr};
     SearchWidget* search_widget_{nullptr};
