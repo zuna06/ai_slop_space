@@ -30,8 +30,8 @@ Part 2: Detailed Log of Substantial AI Assistance
 
             At the end of CR1 once I had finally completed everything, I used AI to check my code and refactor it while keeping the application state and my code's original functions.
 
-            It made several changes, like
+            The main changes it made were the server parsing code and rewriting some of my code to reduce the lines of code, and just test the code to make sure it matches the specs.
 
 Part 3: Student Verification Statement
 
-I affirm that I have thoroughly reviewed all AI-assisted code listed above, that I fully understand how it operates within the broader application architecture, and that I am able to modify or debug it independently.
+I affirm that I have thoroughly reviewed all AI-assisted code listed above, that I fully understand how it operates within the broader application architecture, and that I am able to modify or debug it independently. 
