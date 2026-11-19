@@ -169,6 +169,7 @@ void MainWindow::build_finished(quint64 job_id) {
         try {
             // try to rethrow original error
             std::rethrow_exception(result.error);
+            
         } catch (const std::exception& e) {
             message = e.what();
         } catch (...) {

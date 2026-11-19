@@ -11,7 +11,7 @@
 // TODO: Define the ExitCallback function used to confirm an Exit request.
 void confirm_exit(QWidget* parent) {
     if (QMessageBox::question(parent, QStringLiteral("Exit"),
-                              QStringLiteral("Are you sure you want to exit?"))
+        QStringLiteral("Are you sure you want to exit?"))
         == QMessageBox::Yes) {
         QApplication::quit();
     }
