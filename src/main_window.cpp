@@ -6,7 +6,6 @@
 #include "aiws/gui/search_widget.hpp"
 #include "aiws/gui/term_inspector_widget.hpp"
 #include "aiws/gui/workspace_widget.hpp"
-#include "aiws/gui/corpus_builder.hpp"
 
 #include <QFile>
 #include <QFileDialog>
@@ -19,11 +18,20 @@
 
 #include <utility>
 #include <exception>
+#include <memory>
 #include <string>
 
 namespace aiws::gui {
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget* parent) 
+:   QMainWindow(parent),
+    build_worker_([this] (BuildResult result) {
+        auto shared = std::make_shared<BuildResult>(std::move(result));
+        QMetaObject::invokeMethod(this, [this, shared]() { build_finished(shared); 
+        }, Qt::QueuedConnection);
+    })
+
+{
     setWindowTitle(QStringLiteral("AI Workspace"));
     resize(900, 900);
 
@@ -37,7 +45,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     search_widget_ = new SearchWidget(central);
     term_inspector_widget_ = new TermInspectorWidget(central);
     context_widget_ = new ContextWidget(central);
-    corpus_builder_ = new CorpusBuilder(this);
 
     status_label_ = new QLabel(QStringLiteral("Ready."), central);
     status_label_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
@@ -75,14 +82,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     connect(context_widget_, &ContextWidget::build_context_requested, this, &MainWindow::build_context_requested);
     connect(reset_button_, &QPushButton::clicked, this, &MainWindow::reset_application);
     connect(exit_button_, &QPushButton::clicked, this, &MainWindow::exit_application);
-    connect(corpus_builder_, &CorpusBuilder::build_finished, this, &MainWindow::build_finished);
 
     update_action_states();
 }
 
 MainWindow::~MainWindow() {
-    delete corpus_builder_;
-    corpus_builder_ = nullptr;
+    build_worker_.stop();
     ipc_server_.stop();
 }
 
@@ -142,8 +147,9 @@ void MainWindow::build_corpus() {
         return;
     }
 
-    // start the build using corpus_builder
-    corpus_builder_->start(workspace_, workspace_id_, build_delay_ms_);
+    // hands copy of workspace to worker thread
+    // returns immediately so gui thread doesnt wait for a build
+    build_job_id_ = build_worker_.submit(workspace_, build_delay_ms_);
 
     corpus_state_ = CorpusState::Building;
     workspace_widget_->set_corpus_status(QStringLiteral("Corpus: Building"));
@@ -151,36 +157,35 @@ void MainWindow::build_corpus() {
     update_action_states();
 }
 
-void MainWindow::build_finished(quint64 job_id) {
-    BuildResult result = corpus_builder_->take(job_id);
+void MainWindow::build_finished(const std::shared_ptr<BuildResult>& result) {
+    // check for stale build
+    if (result->job_id == build_job_id_) {
+        apply_build_result(*result);
+    }
 
-    // stale check
-    // add document or reset may have happened after this build started
-    // macro removes the stale check if defined
-    #ifndef AIWS_FAULT_ACCEPT_STALE
-    if (result.workspace_id != workspace_id_) return;
-    #endif
+    emit build_result_received();
+}
+
+void MainWindow::apply_build_result(BuildResult& result) {
+    build_job_id_ = 0;
+
+    // handle the error if there is one
     if (result.error) {
-        // drops failures instead of reporting if defined
-        #ifdef AIWS_FAULT_LOSE_FAILURE
-        return;
-        #endif
+        // edge case 
         std::string message = "unknown error";
         try {
-            // try to rethrow original error
             std::rethrow_exception(result.error);
-            
         } catch (const std::exception& e) {
             message = e.what();
         } catch (...) {
-            // catch all other exceptions and do nothing
+            // catch unknown errors, keeps message
         }
 
         corpus_state_ = CorpusState::Failed;
         workspace_widget_->set_corpus_status(QStringLiteral("Corpus: Build failed"));
         status_label_->setText(QStringLiteral("Build failed: %1").arg(QString::fromStdString(message)));
         update_action_states();
-        
+
         return;
     }
 
@@ -251,7 +256,8 @@ void MainWindow::term_inspection_requested(const QString& term,
 
 void MainWindow::reset_application() {
     workspace_.clear();
-    workspace_id_++;
+    build_worker_.cancel();
+    build_job_id_ = 0;
     corpus_state_ = CorpusState::NotBuilt;
     processing_core_ = ProcessingCore{};
 
@@ -284,7 +290,8 @@ void MainWindow::update_action_states() {
 }
 
 void MainWindow::invalidate_corpus() {
-    workspace_id_++;
+    build_worker_.cancel();
+    build_job_id_ = 0;
     corpus_state_ = CorpusState::NotBuilt;
     workspace_widget_->set_corpus_status(QStringLiteral("Corpus: Not built"));
     clear_processing_outputs();

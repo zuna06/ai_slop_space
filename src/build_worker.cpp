@@ -10,9 +10,9 @@
 namespace aiws {
 
     namespace {
-        BuildOutcome run_build(std::uint64_t ticket, const Workspace& workspace, int delay_ms, std::shared_ptr<const CancelToken> token) {
-            BuildOutcome outcome;
-            outcome.ticket = ticket;
+        BuildResult run_build(std::uint64_t job_id, const Workspace& workspace, int delay_ms, std::shared_ptr<const CancelToken> token) {
+            BuildResult result;
+            result.job_id = job_id;
             
             try {
                 auto chunker = std::make_unique<DelayingChunker>(
@@ -26,12 +26,12 @@ namespace aiws {
                                     std::make_unique<RetrievalEngine>(),
                                     std::make_unique<ContextBuilder>());
                 core.rebuild(workspace);
-                outcome.core.emplace(std::move(core));
+                result.core.emplace(std::move(core));
             } catch (...) {
-                outcome.error = std::current_exception();
+                result.error = std::current_exception();
             }
 
-            return outcome;
+            return result;
         }
     }
 
@@ -45,12 +45,12 @@ namespace aiws {
     }
 
     std::uint64_t BuildWorker::submit(Workspace workspace, int delay_ms) {
-        std::uint64_t ticket = 0;
+        std::uint64_t job_id = 0;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            ticket = ++next_ticket_;
+            job_id = ++next_job_id_;
             // replaces older pending request
-            pending_ = Request{ticket, std::move(workspace), delay_ms < 0 ? 0 : delay_ms};
+            pending_ = Request{job_id, std::move(workspace), delay_ms < 0 ? 0 : delay_ms};
 
             cancel_running_locked();
         }
@@ -59,7 +59,7 @@ namespace aiws {
         // stop so new build doesn't wait
         wake_.notify_one();
 
-        return ticket;
+        return job_id;
     }
 
     void BuildWorker::cancel() {
@@ -107,9 +107,9 @@ namespace aiws {
                 running_ = token;
             }
 
-            if (on_started_) on_started_(request.ticket);
+            if (on_started_) on_started_(request.job_id);
 
-            BuildOutcome outcome = run_build(request.ticket, request.workspace, request.delay_ms, token);
+            BuildResult result = run_build(request.job_id, request.workspace, request.delay_ms, token);
 
             {
                 std::lock_guard<std::mutex> lock(mutex_);
@@ -117,7 +117,7 @@ namespace aiws {
             }
 
             if (!token->cancelled() && on_finished_) {
-                on_finished_(std::move(outcome));
+                on_finished_(std::move(result));
             }
         }
     }

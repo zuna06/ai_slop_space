@@ -16,8 +16,8 @@
 namespace aiws {
 
     // build result that was not cancelled
-    struct BuildOutcome {
-        std::uint64_t ticket{};
+    struct BuildResult {
+        std::uint64_t job_id{};
         std::optional<ProcessingCore> core;
         std::exception_ptr error;
     };
@@ -27,8 +27,8 @@ namespace aiws {
     // New submits replace old submits, outdated builds are never built
     class BuildWorker final {
         public:
-            using FinishedCallback = std::function<void(BuildOutcome)>;
-            using StartedCallback = std::function<void(std::uint64_t ticket)>;
+            using FinishedCallback = std::function<void(BuildResult)>;
+            using StartedCallback = std::function<void(std::uint64_t job_id)>;
 
             explicit BuildWorker(FinishedCallback on_finished, StartedCallback on_started = {});
 
@@ -54,7 +54,7 @@ namespace aiws {
 
         private:
             struct Request {
-                std::uint64_t ticket{};
+                std::uint64_t job_id{};
                 Workspace workspace;
                 int delay_ms{};
             };
@@ -80,7 +80,7 @@ namespace aiws {
             bool stopping_{ false };
 
             // gui thread only
-            std::uint64_t next_ticket_{ 0 };
+            std::uint64_t next_job_id_{ 0 };
 
             // starts after every member exists
             std::thread thread_;

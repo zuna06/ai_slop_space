@@ -5,9 +5,11 @@
 #include "aiws/processing_core.hpp"
 #include "aiws/workspace.hpp"
 #include "aiws/gui/ipc_server.hpp"
+#include "aiws/build_worker.hpp"
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 class QLabel;
 class QPushButton;
@@ -17,7 +19,6 @@ class QWidget;
 namespace aiws::gui {
 
 class ContextWidget;
-class CorpusBuilder;
 class SearchWidget;
 class TermInspectorWidget;
 class WorkspaceWidget;
@@ -78,6 +79,11 @@ public:
     // Everything below this line is the M3 design. In M4 it is yours to
     // change: add, remove, or redesign private members, slots, and helpers.
 
+signals:
+
+    // this signal ets emittd on the gui thread when a finished build reaches the window
+    void build_result_received();
+
 private slots:
     /** @brief Handles a request to select and add a document to the workspace. */
     void add_document();
@@ -133,9 +139,6 @@ private slots:
      */
     void exit_application();
 
-    // collects a finished background build and accepts or rejects it
-    void build_finished(quint64 job_id);
-
 private:
     /**
      * @brief Updates availability of actions that depend on current application state.
@@ -155,6 +158,12 @@ private:
      */
     void clear_processing_outputs();
 
+    // accepts result only if the job_id is the newest one
+    void build_finished(const std::shared_ptr<BuildResult>& result);
+
+    // moves a build into the window or reports failure
+    void apply_build_result(BuildResult& result);
+
     // enum class for corpus state
     enum class CorpusState {
         NotBuilt,
@@ -166,11 +175,13 @@ private:
     Workspace workspace_;
     ProcessingCore processing_core_;
     CorpusState corpus_state_{CorpusState::NotBuilt};
-    std::uint64_t workspace_id_{0};
+    std::uint64_t build_job_id_{0};
     int build_delay_ms_{0};
-    CorpusBuilder* corpus_builder_{nullptr};
     ExitCallback exit_callback_{nullptr};
     IPCServer ipc_server_;
+
+    // one build thread, starts with window
+    BuildWorker build_worker_;
 
     WorkspaceWidget* workspace_widget_{nullptr};
     SearchWidget* search_widget_{nullptr};

@@ -38,7 +38,7 @@
 #include <unistd.h>
 #include <cstring>
 
-using aiws::BuildOutcome;
+using aiws::BuildResult;
 using aiws::BuildWorker;
 using aiws::gui::MainWindow;
 using aiws::gui::SearchWidget;
@@ -133,7 +133,7 @@ namespace {
         window.add_document_file(path("doc_ai.txt"));
         window.add_document_file(path("doc_retrieval.txt"));
         window.add_document_file(path("doc_systems.txt"));
-        QSignalSpy finished(&window, &MainWindow::build_outcome_received);
+        QSignalSpy finished(&window, &MainWindow::build_result_received);
 
         QTimer ticker;
         QSignalSpy ticks(&ticker, &QTimer::timeout);
@@ -153,7 +153,7 @@ namespace {
         window.set_build_delay_ms(50);
         window.add_document_file(path("doc_ai.txt"));
         window.add_document_file(path("doc_retrieval.txt"));
-        QSignalSpy finished(&window, &MainWindow::build_outcome_received);
+        QSignalSpy finished(&window, &MainWindow::build_result_received);
 
         button(window, "Build Corpus")->click();
         check(!button(window, "Build Corpus")->isEnabled(), "build disabled while building");
@@ -227,7 +227,7 @@ namespace {
 
         window.add_document_file(path("doc_ai.txt"));
         window.add_document_file(path("doc_ai.txt"));
-        QSignalSpy finished(&window, &MainWindow::build_outcome_received);
+        QSignalSpy finished(&window, &MainWindow::build_result_received);
 
         button(window, "Build Corpus")->click();
         check(wait_for(finished, 1), "failing build finishes");
@@ -443,8 +443,8 @@ namespace {
     // these run without a window so the worker
     // is tested by itself
 
-    bool has_ticket(const std::vector<std::uint64_t>& tickets, std::uint64_t ticket) {
-        return std::find(tickets.begin(), tickets.end(), ticket) != tickets.end();
+    bool has_job_id(const std::vector<std::uint64_t>& job_ids, std::uint64_t job_id) {
+        return std::find(job_ids.begin(), job_ids.end(), job_id) != job_ids.end();
     }
 
     // records what the worker reports
@@ -457,19 +457,19 @@ namespace {
         std::vector<std::uint64_t> finished;
         std::vector<std::thread::id> threads;
 
-        void on_started(std::uint64_t ticket) {
+        void on_started(std::uint64_t job_id) {
             {
                 std::lock_guard<std::mutex> lock(mutex);
-                started.push_back(ticket);
+                started.push_back(job_id);
                 threads.push_back(std::this_thread::get_id());
             }
             changed.notify_all();
         }
 
-        void on_finished(const BuildOutcome& outcome) {
+        void on_finished(const BuildResult& result) {
             {
                 std::lock_guard<std::mutex> lock(mutex);
-                finished.push_back(outcome.ticket);
+                finished.push_back(result.job_id);
                 threads.push_back(std::this_thread::get_id());
             }
             changed.notify_all();
@@ -477,26 +477,26 @@ namespace {
 
         // waits on the condition variable instead of polling
         // returns false if kWaitMs runs out first
-        bool wait_started(std::uint64_t ticket) {
+        bool wait_started(std::uint64_t job_id) {
             std::unique_lock<std::mutex> lock(mutex);
-            return changed.wait_for(lock, std::chrono::milliseconds(kWaitMs), [&] { return has_ticket(started, ticket); });
+            return changed.wait_for(lock, std::chrono::milliseconds(kWaitMs), [&] { return has_job_id(started, job_id); });
         }
 
-        bool wait_finished(std::uint64_t ticket) {
+        bool wait_finished(std::uint64_t job_id) {
             std::unique_lock<std::mutex> lock(mutex);
-            return changed.wait_for(lock, std::chrono::milliseconds(kWaitMs), [&] { return has_ticket(finished, ticket); });
+            return changed.wait_for(lock, std::chrono::milliseconds(kWaitMs), [&] { return has_job_id(finished, job_id); });
         }
 
-        bool was_finished(std::uint64_t ticket) {
+        bool was_finished(std::uint64_t job_id) {
             std::lock_guard<std::mutex> lock(mutex);
-            return has_ticket(finished, ticket);
+            return has_job_id(finished, job_id);
         }
     };
 
     std::unique_ptr<BuildWorker> make_worker(WorkerLog& log) {
         return std::make_unique<BuildWorker>(
-            [&log](BuildOutcome outcome) { log.on_finished(outcome); },
-            [&log](std::uint64_t ticket) { log.on_started(ticket); }
+            [&log](BuildResult result) { log.on_finished(result); },
+            [&log](std::uint64_t job_id) { log.on_started(job_id); }
         );
     }
 
@@ -545,14 +545,14 @@ namespace {
         WorkerLog log;
         auto worker = make_worker(log);
 
-        const auto ticket = worker->submit(sample_workspace(4), 5000);
-        check(log.wait_started(ticket), "long build starts");
+        const auto job_id = worker->submit(sample_workspace(4), 5000);
+        check(log.wait_started(job_id), "long build starts");
 
         QElapsedTimer timer;
         timer.start();
         worker.reset();
         check(timer.elapsed() < 500, "exit mid build stops within one document");
-        check(!log.was_finished(ticket), "build cancelled by exit never reported");
+        check(!log.was_finished(job_id), "build cancelled by exit never reported");
     }
 
     // worker R1 tests
@@ -613,6 +613,124 @@ namespace {
         check(timer.elapsed() < 400, "next build does not wait for the cancelled one");
     }
 
+    // MainWindow tests
+    // same requirements as above but through the window
+    // so the worker is checked the way the user reaches it
+
+    // destroys the window on this thread while a watchdog waits
+    // a stuck join can't be undone so the watchdog ends the run
+    void destroy_or_fail(std::unique_ptr<MainWindow>& window, const char* name) {
+        std::mutex mutex;
+        std::condition_variable changed;
+        bool done = false;
+
+        std::thread watchdog([&] {
+            std::unique_lock<std::mutex> lock(mutex);
+            if (!changed.wait_for(lock, std::chrono::seconds(2), [&] { return done; })) {
+                std::cerr << "Fail: " << name << '\n';
+                std::_Exit(1);
+            }
+        });
+
+        window.reset();
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            done = true;
+        }
+        changed.notify_one();
+        watchdog.join();
+    }
+
+    // window R4 tests
+
+    // exit with no build running must not hang
+    void test_window_exit_when_idle() {
+        auto window = std::make_unique<MainWindow>();
+        window->add_document_file(path("doc_ai.txt"));
+        button(*window, "Build Corpus")->click();
+        check(wait_for_status(*window, "Corpus: 1 chunks"), "build finishes before idle exit");
+
+        // give the worker time to go back to waiting
+        // so the window's destructor has to wake it up
+        QTest::qWait(100);
+        destroy_or_fail(window, "idle window exits");
+    }
+
+    // window R3 tests
+
+    // reset during a long build, the next build doesn't wait for it
+    void test_rebuild_after_reset_does_not_wait() {
+        MainWindow window;
+        window.set_build_delay_ms(500);
+        window.add_document_file(path("doc_ai.txt"));
+        window.add_document_file(path("doc_retrieval.txt"));
+        window.add_document_file(path("doc_systems.txt"));
+        button(window, "Build Corpus")->click();
+        // let the worker start the long build
+        QTest::qWait(100);
+
+        button(window, "Reset")->click();
+        window.add_document_file(path("doc_ai.txt"));
+        window.set_build_delay_ms(0);
+
+        QElapsedTimer timer;
+        timer.start();
+        button(window, "Build Corpus")->click();
+        check(wait_for_status(window, "Corpus: 1 chunks"), "build after reset finishes");
+        check(timer.elapsed() < 400, "build after reset does not wait for the cancelled one");
+    }
+
+    // add document during a long build, the next build doesn't wait for it
+    void test_rebuild_after_add_does_not_wait() {
+        MainWindow window;
+        window.set_build_delay_ms(500);
+        window.add_document_file(path("doc_ai.txt"));
+        window.add_document_file(path("doc_retrieval.txt"));
+        button(window, "Build Corpus")->click();
+        // let the worker start the long build
+        QTest::qWait(100);
+
+        window.add_document_file(path("doc_systems.txt"));
+        window.set_build_delay_ms(0);
+
+        QElapsedTimer timer;
+        timer.start();
+        button(window, "Build Corpus")->click();
+        check(wait_for_status(window, "Corpus: 3 chunks"), "build after add finishes");
+        check(timer.elapsed() < 400, "build after add does not wait for the cancelled one");
+    }
+
+    // remote add during a long build works like add document
+    // the running build is cancelled and the user sees Not built
+    void test_rebuild_after_remote_add_does_not_wait() {
+        auto socket = test_socket("remote");
+        MainWindow window;
+        window.start_ipc(socket);
+        window.set_build_delay_ms(500);
+        window.add_document_file(path("doc_ai.txt"));
+        window.add_document_file(path("doc_retrieval.txt"));
+        button(window, "Build Corpus")->click();
+        // let the worker start the long build
+        QTest::qWait(100);
+
+        int fd = ipc_connect(socket);
+        check(fd >= 0, "ipc connect during build");
+        std::string file = QFileInfo(path("doc_systems.txt")).absoluteFilePath().toStdString();
+        uint8_t status = ipc_send_add(fd, file);
+        close(fd);
+
+        check(status == 0, "remote add during build accepted");
+        check(wait_for_docs(window, 3), "remote add during build listed");
+        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "remote add invalidates during build");
+
+        window.set_build_delay_ms(0);
+        QElapsedTimer timer;
+        timer.start();
+        button(window, "Build Corpus")->click();
+        check(wait_for_status(window, "Corpus: 3 chunks"), "build after remote add finishes");
+        check(timer.elapsed() < 400, "build after remote add does not wait for the cancelled one");
+    }
+
 }
 
 int main(int argc, char* argv[]) {
@@ -623,6 +741,11 @@ int main(int argc, char* argv[]) {
     test_worker_one_thread();
     test_worker_outdated_request_never_built();
     test_worker_cancel_does_not_delay_next_build();
+
+    test_window_exit_when_idle();
+    test_rebuild_after_reset_does_not_wait();
+    test_rebuild_after_add_does_not_wait();
+    test_rebuild_after_remote_add_does_not_wait();
 
     test_add_document_file();
     test_build_becomes_current();
