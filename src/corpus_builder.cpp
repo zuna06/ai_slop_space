@@ -21,7 +21,7 @@ namespace aiws::gui {
         void run_build(
             Workspace workspace,
             int delay_ms,
-            std::shared_ptr<const std::atomic<bool>> cancel,
+            std::shared_ptr<const CancelToken> cancel,
             std::promise<ProcessingCore> promise,
             CorpusBuilder* builder,
             quint64 job_id
@@ -57,7 +57,7 @@ namespace aiws::gui {
     // and join() if true
     CorpusBuilder::~CorpusBuilder() {
         for (auto& job : jobs_) {
-            job->cancel->store(true);
+            job->cancel->cancel();
         }
         for (auto& job : jobs_) {
             if (job->worker.joinable()) {

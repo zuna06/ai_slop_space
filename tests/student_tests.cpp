@@ -1,8 +1,8 @@
-// Your M4 tests (specification, Section 6).
+// Your M5 tests (specification, Section 7).
 
-#include "aiws/gui/corpus_builder.hpp"
 #include "aiws/gui/main_window.hpp"
 #include "aiws/gui/search_widget.hpp"
+#include "aiws/build_worker.hpp"
 
 #include <QAbstractItemModel>
 #include <QApplication>
@@ -20,16 +20,26 @@
 #include <QTest>
 #include <QFile>
 
+#include <algorithm>
+#include <chrono>
+#include <condition_variable>
 #include <cstddef>
+#include <cstdlib>
 #include <iostream>
 #include <cstdint>
+#include <future>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
+#include <vector>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <cstring>
 
-using aiws::gui::CorpusBuilder;
+using aiws::BuildOutcome;
+using aiws::BuildWorker;
 using aiws::gui::MainWindow;
 using aiws::gui::SearchWidget;
 
@@ -90,6 +100,17 @@ namespace {
         return (spy.count() >= count);
     }
 
+    // waits until the corpus status label shows text
+    // runs the event loop so queued build results arrive
+    bool wait_for_status(QWidget& root, const char* text) {
+        QElapsedTimer timer;
+        timer.start();
+        while (corpus_status(root) != QLatin1String(text) && timer.elapsed() < kWaitMs) {
+            QTest::qWait(10);
+        }
+        return corpus_status(root) == QLatin1String(text);
+    }
+
 
     // all tests
 
@@ -112,7 +133,7 @@ namespace {
         window.add_document_file(path("doc_ai.txt"));
         window.add_document_file(path("doc_retrieval.txt"));
         window.add_document_file(path("doc_systems.txt"));
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
+        QSignalSpy finished(&window, &MainWindow::build_outcome_received);
 
         QTimer ticker;
         QSignalSpy ticks(&ticker, &QTimer::timeout);
@@ -132,7 +153,7 @@ namespace {
         window.set_build_delay_ms(50);
         window.add_document_file(path("doc_ai.txt"));
         window.add_document_file(path("doc_retrieval.txt"));
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
+        QSignalSpy finished(&window, &MainWindow::build_outcome_received);
 
         button(window, "Build Corpus")->click();
         check(!button(window, "Build Corpus")->isEnabled(), "build disabled while building");
@@ -149,38 +170,43 @@ namespace {
 
     void test_add_during_build() {
         MainWindow window;
-        window.set_build_delay_ms(20);
+        window.set_build_delay_ms(200);
         window.add_document_file(path("doc_ai.txt"));
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
 
         button(window, "Build Corpus")->click();
         // build can only be accepted when event loop runs
         window.add_document_file(path("doc_retrieval.txt"));
         check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "add document invalidates during build");
-
-        check(wait_for(finished, 1), "stale build finishes");
-        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "stale build discarded after add document");
-        check(!button(window, "Inspect")->isEnabled(), "inspect stays disabled after stale build");
         check(button(window, "Build Corpus")->isEnabled(), "build re enabled after add");
+
+        // longer than the outdated build would have taken
+        QTest::qWait(400);
+        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "outdated build discarded after add document");
+        check(!button(window, "Inspect")->isEnabled(), "inspect stays disabled after outdated build");
+
+        window.set_build_delay_ms(0);
+        button(window, "Build Corpus")->click();
+        check(wait_for_status(window, "Corpus: 2 chunks"), "rebuild after add becomes current");
     }
 
     void test_reset_during_build() {
         MainWindow window;
-        window.set_build_delay_ms(20);
+        window.set_build_delay_ms(200);
         window.add_document_file(path("doc_ai.txt"));
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
 
         button(window, "Build Corpus")->click();
         button(window, "Reset")->click();
-        check(wait_for(finished, 1), "stale build finishes after reset");
-        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "stale build discarded after reset");
+        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "reset invalidates during build");
+
+        // longer than the outdated build would have taken
+        QTest::qWait(400);
+        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "outdated build discarded after reset");
         check(!button(window, "Inspect")->isEnabled(), "inspect disabled after reset");
     }
 
     void test_older_build_doesnt_overwrite_newer() {
         MainWindow window;
         window.add_document_file(path("doc_ai.txt"));
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
 
         window.set_build_delay_ms(400);
         button(window, "Build Corpus")->click();
@@ -188,7 +214,9 @@ namespace {
         window.set_build_delay_ms(0);
         button(window, "Build Corpus")->click();
 
-        check(wait_for(finished, 2), "both builds finish");
+        check(wait_for_status(window, "Corpus: 2 chunks"), "newest build becomes current");
+        // the older build would have finished by now if it kept running
+        QTest::qWait(600);
         check(corpus_status(window) == QStringLiteral("Corpus: 2 chunks"), "newest build stays current");
     }
 
@@ -199,7 +227,7 @@ namespace {
 
         window.add_document_file(path("doc_ai.txt"));
         window.add_document_file(path("doc_ai.txt"));
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
+        QSignalSpy finished(&window, &MainWindow::build_outcome_received);
 
         button(window, "Build Corpus")->click();
         check(wait_for(finished, 1), "failing build finishes");
@@ -230,12 +258,10 @@ namespace {
         check(timer.elapsed() < 2000, "destroying window mid build doesn't hang");
     }
 
-    // should not leave any jobs
+    // only the last of several quick builds becomes current
     void test_repeated_builds() {
         MainWindow window;
         window.set_build_delay_ms(20);
-        auto* builder = window.findChild<CorpusBuilder*>();
-        QSignalSpy finished(builder, &CorpusBuilder::build_finished);
 
         window.add_document_file(path("doc_ai.txt"));
         button(window, "Build Corpus")->click();
@@ -244,9 +270,7 @@ namespace {
         window.add_document_file(path("doc_systems.txt"));
         button(window, "Build Corpus")->click();
 
-        check(wait_for(finished, 3), "all builds finish");
-        check(builder->job_count() == 0, "no jobs left");
-        check(corpus_status(window) == QStringLiteral("Corpus: 3 chunks"), "last build is current");
+        check(wait_for_status(window, "Corpus: 3 chunks"), "last build is current");
     }
 
     std::string test_socket(const char* tag) {
@@ -299,7 +323,6 @@ namespace {
         std::string file = QFileInfo(path("doc_ai.txt")).absoluteFilePath().toStdString();
         window.add_document_file(path("doc_systems.txt"));
         window.set_build_delay_ms(300);
-        QSignalSpy finished(window.findChild<CorpusBuilder*>(), &CorpusBuilder::build_finished);
         button(window, "Build Corpus")->click();
         int fd = ipc_connect(socket);
         check(fd >= 0, "ipc connect");
@@ -310,7 +333,6 @@ namespace {
         check(status == 0, "ipc add accepted");
 
         check(wait_for_docs(window, 2), "document added via ipc");
-        check(wait_for(finished, 1), "build started before remote add finishes");
         check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "corpus invalidated after ipc add");
         check(button(window, "Build Corpus")->isEnabled(), "build enabled after ipc add");
 
@@ -417,10 +439,190 @@ namespace {
         check(!QFileInfo(QString::fromStdString(socket)).exists(), "socket file removed after exit");
     }
 
+    // BuildWorker tests
+    // these run without a window so the worker
+    // is tested by itself
+
+    bool has_ticket(const std::vector<std::uint64_t>& tickets, std::uint64_t ticket) {
+        return std::find(tickets.begin(), tickets.end(), ticket) != tickets.end();
+    }
+
+    // records what the worker reports
+    // callbacks run on the worker thread so
+    // everything here is guarded by mutex
+    struct WorkerLog {
+        std::mutex mutex;
+        std::condition_variable changed;
+        std::vector<std::uint64_t> started;
+        std::vector<std::uint64_t> finished;
+        std::vector<std::thread::id> threads;
+
+        void on_started(std::uint64_t ticket) {
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                started.push_back(ticket);
+                threads.push_back(std::this_thread::get_id());
+            }
+            changed.notify_all();
+        }
+
+        void on_finished(const BuildOutcome& outcome) {
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                finished.push_back(outcome.ticket);
+                threads.push_back(std::this_thread::get_id());
+            }
+            changed.notify_all();
+        }
+
+        // waits on the condition variable instead of polling
+        // returns false if kWaitMs runs out first
+        bool wait_started(std::uint64_t ticket) {
+            std::unique_lock<std::mutex> lock(mutex);
+            return changed.wait_for(lock, std::chrono::milliseconds(kWaitMs), [&] { return has_ticket(started, ticket); });
+        }
+
+        bool wait_finished(std::uint64_t ticket) {
+            std::unique_lock<std::mutex> lock(mutex);
+            return changed.wait_for(lock, std::chrono::milliseconds(kWaitMs), [&] { return has_ticket(finished, ticket); });
+        }
+
+        bool was_finished(std::uint64_t ticket) {
+            std::lock_guard<std::mutex> lock(mutex);
+            return has_ticket(finished, ticket);
+        }
+    };
+
+    std::unique_ptr<BuildWorker> make_worker(WorkerLog& log) {
+        return std::make_unique<BuildWorker>(
+            [&log](BuildOutcome outcome) { log.on_finished(outcome); },
+            [&log](std::uint64_t ticket) { log.on_started(ticket); }
+        );
+    }
+
+    // made up docs so the worker tests
+    // don't depend on the data folder
+    aiws::Workspace sample_workspace(int docs) {
+        aiws::Workspace workspace;
+        for (int i = 0; i < docs; i++) {
+            const std::string id = "doc" + std::to_string(i);
+            workspace.add_document(aiws::Document(id, id, "retrieval index term frequency " + id));
+        }
+        return workspace;
+    }
+
+    // worker R4 tests
+
+    // exit with an idle worker must not hang
+    // runs first so a hang is caught fast
+    void test_worker_exit_when_idle() {
+        WorkerLog log;
+        auto worker = make_worker(log);
+        check(log.wait_finished(worker->submit(sample_workspace(1), 0)), "idle test build finishes");
+
+        // give the worker time to go back to waiting
+        // so stop() has to wake it up
+        usleep(100 * 1000);
+
+        std::promise<void> stopped;
+        auto done = stopped.get_future();
+        std::thread exiting([&] {
+            worker.reset();
+            stopped.set_value();
+        });
+
+        // a stuck join can't be undone so end
+        // the whole test run here
+        if (done.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
+            std::cerr << "Fail: idle worker stops on exit\n";
+            std::_Exit(1);
+        }
+        exiting.join();
+    }
+
+    // exit during a long build stops within one document
+    void test_worker_exit_mid_build() {
+        WorkerLog log;
+        auto worker = make_worker(log);
+
+        const auto ticket = worker->submit(sample_workspace(4), 5000);
+        check(log.wait_started(ticket), "long build starts");
+
+        QElapsedTimer timer;
+        timer.start();
+        worker.reset();
+        check(timer.elapsed() < 500, "exit mid build stops within one document");
+        check(!log.was_finished(ticket), "build cancelled by exit never reported");
+    }
+
+    // worker R1 tests
+
+    // every build runs on the same worker thread
+    void test_worker_one_thread() {
+        WorkerLog log;
+        auto worker = make_worker(log);
+        const auto worker_id = worker->thread_id();
+
+        bool all_finished = true;
+        for (int i = 0; i < 3; i++) {
+            if (!log.wait_finished(worker->submit(sample_workspace(1), 0))) all_finished = false;
+        }
+        check(all_finished, "worker finishes three builds");
+        check(worker_id != std::this_thread::get_id(), "worker is its own thread");
+
+        std::lock_guard<std::mutex> lock(log.mutex);
+        bool same_thread = true;
+        for (const auto& id : log.threads) {
+            if (id != worker_id) same_thread = false;
+        }
+        check(same_thread, "every build runs on the one worker thread");
+    }
+
+    // worker R2 tests
+
+    // replaced and cancelled requests are never built
+    void test_worker_outdated_request_never_built() {
+        WorkerLog log;
+        auto worker = make_worker(log);
+
+        const auto a = worker->submit(sample_workspace(2), 300);
+        check(log.wait_started(a), "first build starts");
+        const auto b = worker->submit(sample_workspace(2), 300);
+        const auto c = worker->submit(sample_workspace(2), 0);
+
+        check(log.wait_finished(c), "newest request is built");
+        check(!log.was_finished(a), "cancelled running build never reported");
+        check(!log.was_finished(b), "replaced request never built");
+    }
+
+    // worker R3 tests
+
+    // the next build doesn't wait for the cancelled one
+    void test_worker_cancel_does_not_delay_next_build() {
+        WorkerLog log;
+        auto worker = make_worker(log);
+
+        // 2 seconds if it is not cancelled
+        const auto slow = worker->submit(sample_workspace(4), 500);
+        check(log.wait_started(slow), "slow build starts");
+
+        QElapsedTimer timer;
+        timer.start();
+        const auto next = worker->submit(sample_workspace(1), 0);
+        check(log.wait_finished(next), "next build finishes");
+        check(timer.elapsed() < 400, "next build does not wait for the cancelled one");
+    }
+
 }
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
+
+    test_worker_exit_when_idle();
+    test_worker_exit_mid_build();
+    test_worker_one_thread();
+    test_worker_outdated_request_never_built();
+    test_worker_cancel_does_not_delay_next_build();
 
     test_add_document_file();
     test_build_becomes_current();

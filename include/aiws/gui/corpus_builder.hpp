@@ -14,6 +14,7 @@
 
 #include "aiws/processing_core.hpp"
 #include "aiws/workspace.hpp"
+#include "aiws/cancel_token.hpp"
 
 namespace aiws::gui {
 
@@ -86,7 +87,7 @@ namespace aiws::gui {
             struct BuildJob {
                 quint64 id{};
                 std::uint64_t workspace_id{};
-                std::shared_ptr<std::atomic<bool>> cancel = std::make_shared<std::atomic<bool>>(false);
+                std::shared_ptr<CancelToken> cancel = std::make_shared<CancelToken>();
                 std::future<ProcessingCore> result;
                 std::thread worker;
             };
