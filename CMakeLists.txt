@@ -37,6 +37,7 @@ add_library(aiws_app STATIC
     src/delaying_chunker.cpp
     src/cancel_token.cpp
     src/build_worker.cpp
+    src/corpus_state.cpp
     src/ipc_server.cpp
     include/aiws/gui/main_window.hpp
     include/aiws/gui/resettable.hpp
@@ -48,6 +49,7 @@ add_library(aiws_app STATIC
     include/aiws/gui/ipc_server.hpp
     include/aiws/cancel_token.hpp
     include/aiws/build_worker.hpp
+    include/aiws/gui/corpus_state.hpp
 )
 target_include_directories(aiws_app PUBLIC include)
 target_link_libraries(aiws_app PUBLIC aiws_m2 Qt6::Widgets)

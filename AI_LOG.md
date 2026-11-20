@@ -10,7 +10,9 @@ Part 2: Detailed Log of Substantial AI Assistance
 
             What the AI did:
             
-            I used AI for creating tests because I've noticed it does a good job of creating general tests and tests for edge cases. It helped me realize what things I had to fix or add to my code. I also used it to make all the necassary changes to CMakeLists.txt. 
+            - I used AI for creating tests because I've noticed it does a good job of creating general tests and tests for edge cases. It helped me realize what things I had to fix or add to my code. I also used it to make all the necassary changes to CMakeLists.txt.
+            - Used it for outlining and p
+
             
             What I fixed + what the AI got wrong
 

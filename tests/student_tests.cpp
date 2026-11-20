@@ -731,6 +731,41 @@ namespace {
         check(timer.elapsed() < 400, "build after remote add does not wait for the cancelled one");
     }
 
+    // R5 tests
+
+    // current -> add document -> not built
+    // the old corpus can't be used after the workspace changes
+    void test_add_after_current_goes_to_not_built() {
+        MainWindow window;
+        window.add_document_file(path("doc_ai.txt"));
+        button(window, "Build Corpus")->click();
+        check(wait_for_status(window, "Corpus: 1 chunks"), "build becomes current");
+        check(button(window, "Inspect")->isEnabled(), "inspect enabled when current");
+
+        window.add_document_file(path("doc_retrieval.txt"));
+        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "add after current goes to not built");
+        check(!button(window, "Inspect")->isEnabled(), "inspect disabled after add");
+        check(button(window, "Build Corpus")->isEnabled(), "build enabled after add");
+    }
+
+    // failed -> reset -> not built -> building -> current
+    void test_failed_then_reset_then_build() {
+        MainWindow window;
+        window.add_document_file(path("doc_ai.txt"));
+        window.add_document_file(path("doc_ai.txt"));
+        button(window, "Build Corpus")->click();
+        check(wait_for_status(window, "Corpus: Build failed"), "duplicate documents fail");
+
+        button(window, "Reset")->click();
+        check(corpus_status(window) == QStringLiteral("Corpus: Not built"), "reset after failed goes to not built");
+        check(!button(window, "Build Corpus")->isEnabled(), "build disabled with empty workspace after reset");
+
+        window.add_document_file(path("doc_ai.txt"));
+        button(window, "Build Corpus")->click();
+        check(corpus_status(window) == QStringLiteral("Corpus: Building"), "build after reset goes to building");
+        check(wait_for_status(window, "Corpus: 1 chunks"), "build after reset becomes current");
+    }
+
 }
 
 int main(int argc, char* argv[]) {
@@ -746,6 +781,9 @@ int main(int argc, char* argv[]) {
     test_rebuild_after_reset_does_not_wait();
     test_rebuild_after_add_does_not_wait();
     test_rebuild_after_remote_add_does_not_wait();
+
+    test_add_after_current_goes_to_not_built();
+    test_failed_then_reset_then_build();
 
     test_add_document_file();
     test_build_becomes_current();

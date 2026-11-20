@@ -6,6 +6,7 @@
 #include "aiws/workspace.hpp"
 #include "aiws/gui/ipc_server.hpp"
 #include "aiws/build_worker.hpp"
+#include "aiws/gui/corpus_state.hpp"
 
 #include <cstdint>
 #include <string>
@@ -81,7 +82,7 @@ public:
 
 signals:
 
-    // this signal ets emittd on the gui thread when a finished build reaches the window
+    // this signal ets emitted on the gui thread when a finished build reaches the window
     void build_result_received();
 
 private slots:
@@ -146,14 +147,6 @@ private:
     void update_action_states();
 
     /**
-     * @brief Marks the processing corpus as no longer current for the workspace.
-     *
-     * Processing output that depends on the previous corpus is no longer made
-     * available after invalidation.
-     */
-    void invalidate_corpus();
-
-    /**
      * @brief Clears displayed search and context output that depends on processing state.
      */
     void clear_processing_outputs();
@@ -161,21 +154,29 @@ private:
     // accepts result only if the job_id is the newest one
     void build_finished(const std::shared_ptr<BuildResult>& result);
 
-    // moves a build into the window or reports failure
-    void apply_build_result(BuildResult& result);
+    // state helpers
+    friend class NotBuiltState;
+    friend class BuildingState;
+    friend class CurrentState;
+    friend class FailedState;
 
-    // enum class for corpus state
-    enum class CorpusState {
-        NotBuilt,
-        Building,
-        Current,
-        Failed
-    };
+    // state switcher
+    void set_state(std::unique_ptr<CorpusState> next);
+
+    // gives copy of workspace to worker and returns job id
+    std::uint64_t start_build();
+
+    // drops queued build and cancels running build
+    void cancel_build();
+
+    // corpus display functions
+    void show_not_built();
+    void show_built(ProcessingCore& core);
+    void show_build_failed(const std::string& message);
 
     Workspace workspace_;
     ProcessingCore processing_core_;
-    CorpusState corpus_state_{CorpusState::NotBuilt};
-    std::uint64_t build_job_id_{0};
+    std::unique_ptr<CorpusState> state_{std::make_unique<NotBuiltState>()};
     int build_delay_ms_{0};
     ExitCallback exit_callback_{nullptr};
     IPCServer ipc_server_;
