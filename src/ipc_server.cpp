@@ -14,22 +14,33 @@
 
 namespace aiws::gui {
     namespace {
-        bool read_exact(int fd, void* destination, std::size_t size,
-                        const std::atomic<bool>& running) {
+        // reworked read_exact
+        // waits on client and listen socket
+        // stop() shuts down the listen socket which wakes poll instantly
+        // so theres no timeout loop checking running_
+        bool read_exact(int fd, void* destination, size_t size, int stop_fd) {
             auto* bytes = static_cast<char*>(destination);
             const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-            pollfd socket{fd, POLLIN, 0};
-            while (size && running && std::chrono::steady_clock::now() < deadline) {
-                const int ready = poll(&socket, 1, 50);
-                if (ready == 0 || (ready < 0 && errno == EINTR)) continue;
-                if (ready < 0) return false;
+
+            pollfd fds[2] = {{fd, POLLIN, 0}, {stop_fd, 0, 0}};
+            while (size) {
+                const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    deadline - std::chrono::steady_clock::now()).count();
+                if (left <= 0) return false;
+
+                const int ready = poll(fds, 2, static_cast<int>(left));
+                if (ready < 0 && errno == EINTR) continue;
+                if (ready < 0 || fds[1].revents) return false;
+
                 const auto count = recv(fd, bytes, size, MSG_DONTWAIT);
                 if (count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
                 if (count <= 0) return false;
+
                 bytes += count;
-                size -= static_cast<std::size_t>(count);
+                size -= static_cast<size_t>(count);
             }
-            return size == 0;
+
+            return true;
         }
 
         void reply(int fd, const char* reason = nullptr) {
@@ -112,7 +123,7 @@ namespace aiws::gui {
     // then queues the add on the gui thread
     void IPCServer::handle_client(int fd) {
         uint8_t header[4];
-        if (!read_exact(fd, header, sizeof(header), running_)) return;
+        if (!read_exact(fd, header, sizeof(header), listen_fd_)) return;
 
         // pack the header bytes into one 32 bit int
         uint32_t payload_len = (uint32_t(header[0]) << 24 | uint32_t(header[1]) << 16 |
@@ -123,7 +134,7 @@ namespace aiws::gui {
         if (payload_len == 0 || payload_len > 1024 * 1024) return;
         
         std::string payload(payload_len, '\0');
-        if (!read_exact(fd, payload.data(), payload.size(), running_)) return;
+        if (!read_exact(fd, payload.data(), payload.size(), listen_fd_)) return;
 
         // payload should be more than 4 bytes
         // and should have add for add document
