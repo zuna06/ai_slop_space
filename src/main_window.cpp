@@ -230,7 +230,7 @@ namespace aiws::gui {
         context_widget_->clear_context();
     }
 
-    void MainWindow::query_changed(const QString& query) {
+    void MainWindow::query_changed(const QString&) {
         update_action_states();
     }
 

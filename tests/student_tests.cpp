@@ -297,8 +297,8 @@ namespace {
         uint8_t header[4] = { static_cast<uint8_t>(payload_len >> 24), static_cast<uint8_t>(payload_len >> 16),
                               static_cast<uint8_t>(payload_len >> 8), static_cast<uint8_t>(payload_len) };
 
-        write(fd, header, 4);
-        write(fd, payload.data(), payload.size());
+        if (write(fd, header, 4) != 4) return 2;
+        if (write(fd, payload.data(), payload.size()) != static_cast<ssize_t>(payload.size())) return 2;
 
         uint8_t status{};
         return read(fd, &status, 1) == 1 ? status : 2;
@@ -395,19 +395,19 @@ namespace {
                               static_cast<uint8_t>(payload_len >> 8), static_cast<uint8_t>(payload_len) };
         // send header 2 bytes at a time
         // with a pause
-        write(fd, header, 2);
+        check(write(fd, header, 2) == 2, "write first half of header");
         usleep(5000);
-        write(fd, header + 2, 2);
+        check(write(fd, header + 2, 2) == 2, "write second half of header");
         usleep(5000);
 
         // also send the payload in 2 parts
         size_t half = payload.size() / 2;
-        write(fd, payload.data(), half);
+        check(write(fd, payload.data(), half) == static_cast<ssize_t>(half), "write first half of payload");
         usleep(5000);
-        write(fd, payload.data() + half, payload.size() - half);
+        check(write(fd, payload.data() + half, payload.size() - half) == static_cast<ssize_t>(payload.size() - half), "write second half of payload");
 
         uint8_t status = 2;
-        read(fd, &status, 1);
+        check(read(fd, &status, 1) == 1, "read status after partial writes");
         close(fd);
 
         check(status == 0, "ipc handles partial writes");
