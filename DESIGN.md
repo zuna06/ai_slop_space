@@ -68,13 +68,10 @@ IPCServer::handle_client queues add_document_file on the gui thread which calls 
 
 The shared data is pending_ which is the request, stopping_ which is the stop flag, and running_ and cancelled_ which are the running build's token. This is because the GUI needs to give the request, stop the worker and cancel a running build. Each of these are things that both threads need to be able to see. 
 
-
-
-
 6. Fault Switches
 AIWS_FAULT_NO_CANCEL is in BuildWorker::cancel_running_locked() and skips the cancel so an old build runs until its finished and the next build waits. This is caught by these tests:
 
-test_worker_outdated_request_never_built,
+test_worker_outdated_request_never_built
 test_worker_cancel_does_not_delay_next_build
 test_rebuild_after_reset_does_not_wait
 test_rebuild_after_add_does_not_wait
