@@ -10,14 +10,14 @@
 The GUi thread: MainWindow, widgets, CorpusState, BuildWorker submit, cancel and stop functions, and IPCServer start and stop functions
 
 Build thread: BuildWorker::run gets started in the constructor, and is joined in BuildWorker::stop() from MainWindow's destructor. Builds using workspace copy.
-IPC Thread: started with IPCServer::run and joined in IPCServer::stop()
+IPC Thread: started with IPCServer::start and joined in IPCServer::stop()
 
 BuildWorker shared data is pending_, running_, and stopping_. They are protected by the mutex_ and wake_, they are alwasy accessed under the mutex and the worker waits with
 wake_.wait(). They are used by GUI thread in submit, cancel, and stop and by the build thread in run.
 
 CancelToken::cancelled_ is shared and also protected by the token's mutex_ and condition variable, the lock order is always the BuildWorker::mutex_ first then the token's so there is no deadlock. Set by GUI thread through BuildWorker, read by the build thread in the chunk function.
 
-IPCServer::running is shared and its type std::atomic protects it from read and writes. Written by the GUI thread in stop and read by the IPC thread in run
+IPCServer::running_ is shared and its type std::atomic protects it from read and writes. Written by the GUI thread in stop and read by the IPC thread in run
 
 A finished BuildResult is moved into a shared ptr and posted to the GUI thread with a queued invokeMethod Qt function, after this the worker doesn't touch it. Same for remote adds.
 
